@@ -13,7 +13,8 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "langchain",
-    "langgraph"
+    "langgraph",
+    "langfuse"
 ]
 
 [project.optional-dependencies]

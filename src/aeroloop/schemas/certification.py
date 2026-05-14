@@ -43,3 +43,12 @@ class ApplicabilityResult(BaseModel):
     confidence: float
     reason: str
     required_follow_up: list[str] = []
+
+from .requirement import CandidateRequirement
+from .regulation import RegulationEvidence
+
+class CertificationRequirementResult(BaseModel):
+    candidate_requirements: list[CandidateRequirement]
+    regulation_evidence: list[RegulationEvidence]
+    applicability_results: list[ApplicabilityResult]
+    unresolved_certification_questions: list[str]

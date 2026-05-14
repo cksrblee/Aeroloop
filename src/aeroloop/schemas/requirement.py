@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from .common import Assumption, MissingField
 from .mission import MissionProfile
 from .regulation import RegulationEvidence
-from .certification import ApplicabilityResult
 from .traceability import TraceLink
 
 class CandidateRequirement(BaseModel):
@@ -70,6 +69,12 @@ class CandidateRequirement(BaseModel):
 
     assumptions: list[str] = []
     unresolved_issues: list[str] = []
+
+class CustomerRequirementResult(BaseModel):
+    candidate_requirements: list[CandidateRequirement]
+    assumptions: list[Assumption]
+    unresolved_questions: list[str]
+
 
 class FinalRequirement(BaseModel):
     requirement_id: str
@@ -167,6 +172,10 @@ class RequirementQualityReport(BaseModel):
 
     summary: str
 
+
+from .certification import ApplicabilityResult
+
+
 class RequirementAnalysisResult(BaseModel):
     result_id: str
     run_id: str
@@ -184,5 +193,12 @@ class RequirementAnalysisResult(BaseModel):
     assumptions: list[Assumption]
     missing_fields: list[MissingField]
 
+    trace_links: list[TraceLink]
+    quality_report: RequirementQualityReport
+
+class RequirementReasoningResult(BaseModel):
+    final_requirements: list[FinalRequirement]
+    conflicts: list[RequirementConflict]
+    assumptions: list[Assumption]
     trace_links: list[TraceLink]
     quality_report: RequirementQualityReport

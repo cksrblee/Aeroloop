@@ -3,6 +3,7 @@ uvicorn
 pydantic
 langchain
 langgraph
+langfuse
 
 [dev]
 pytest

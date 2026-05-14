@@ -46,6 +46,14 @@ class BaseOrchestratorAgent(BaseAgent):
 from aeroloop.llm.factory import LLMFactory
 from aeroloop.llm.base import BaseLLMAdapter
 
+from typing import Any, Dict, Optional
+from aeroloop.utils.prompt_provider import PromptProvider
+
+try:
+    from langfuse import Langfuse
+except ImportError:
+    Langfuse = Any
+
 # =====================================================================
 # 2. AI / Requirements Pipeline Base Class
 # =====================================================================
@@ -54,8 +62,19 @@ class BaseAIAgent(BaseAgent):
     LLM 기반의 추론, 텍스트 분석, 요구도 정제 등을 수행하는 AI 파이프라인 에이전트의 부모 클래스입니다.
     임무 파싱, 고객 요구도, 인증 요구도, 요구도 정제, 보고서 생성 에이전트 등이 상속받습니다.
     """
-    def __init__(self, name: str, description: str, llm_model: Optional[BaseLLMAdapter] = None, model_config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, 
+        name: str, 
+        description: str, 
+        llm_model: Optional[BaseLLMAdapter] = None, 
+        model_config: Optional[Dict[str, Any]] = None,
+        prompt_provider: Optional[PromptProvider] = None,
+        langfuse_client: Optional[Langfuse] = None
+    ):
         super().__init__(name, description)
+        
+        self.prompt_provider = prompt_provider or PromptProvider(langfuse_client)
+        self.langfuse_client = langfuse_client or self.prompt_provider.client
         
         # 외부에서 주입받은 모델이 있으면 사용하고, 없으면 config를 기반으로 Factory를 통해 생성합니다.
         if llm_model:
