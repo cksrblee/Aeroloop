@@ -1,0 +1,2 @@
+[console_scripts]
+aero-run = aeroloop.cli.run:main

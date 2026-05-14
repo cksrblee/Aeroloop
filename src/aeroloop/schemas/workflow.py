@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from .common import Assumption, MissingField, ParsedFact, ErrorInfo
-from .mission import RawMissionInput, MissionProfile
+from .mission import MissionParsingInput, MissionProfile
 from .requirement import CandidateRequirement, FinalRequirement, RequirementConflict
 from .regulation import RegulationEvidence
 from .certification import ApplicabilityResult
@@ -21,7 +21,7 @@ class WorkflowStage(str, Enum):
 class WorkflowState(BaseModel):
     run_id: str
     current_stage: str
-    raw_input: RawMissionInput
+    raw_input: MissionParsingInput
     mission_profile: MissionProfile | None = None
     candidate_requirements: list[CandidateRequirement] = []
     regulation_evidence: list[RegulationEvidence] = []
@@ -32,7 +32,7 @@ class WorkflowState(BaseModel):
 
 class RequirementBlackboard(BaseModel):
     run_id: str
-    raw_input: RawMissionInput
+    raw_input: MissionParsingInput
 
     mission_profile: MissionProfile | None = None
     parsed_facts: list[ParsedFact] = []

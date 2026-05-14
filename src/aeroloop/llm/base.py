@@ -30,6 +30,13 @@ class BaseLLMAdapter(ABC):
         """
         pass
         
+    @abstractmethod
+    def generate_structured(self, messages: List[Dict[str, str]], schema: Any, **kwargs) -> Any:
+        """
+        Pydantic 스키마(schema)에 맞추어 구조화된 응답을 생성합니다.
+        """
+        pass
+
     def get_langchain_model(self) -> Any:
         """
         LangGraph나 LangChain 체인에 직접 주입할 수 있도록 

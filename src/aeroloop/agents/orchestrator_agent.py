@@ -9,7 +9,7 @@ except ImportError:
         return decorator
 
 from aeroloop.agents.base_agent import BaseOrchestratorAgent
-from aeroloop.schemas.mission import RawMissionInput
+from aeroloop.schemas.mission import MissionParsingInput
 from aeroloop.schemas.requirement import RequirementAnalysisResult
 from aeroloop.schemas.workflow import RequirementBlackboard, WorkflowState, WorkflowStage
 
@@ -45,7 +45,7 @@ class OrchestratorAgent(BaseOrchestratorAgent):
 
     # This is the core method that manages the entire requirement analysis pipeline.
     @observe(as_type="generation")
-    def run_requirement_analysis(self, raw_input: RawMissionInput) -> RequirementAnalysisResult:
+    def run_requirement_analysis(self, raw_input: MissionParsingInput) -> RequirementAnalysisResult:
         """
         Main entry point for running the requirement analysis workflow.
         """

@@ -13,6 +13,7 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "langchain",
+    "langchain-openai",
     "langgraph",
     "langfuse"
 ]
@@ -24,3 +25,6 @@ dev = [
     "black",
     "isort"
 ]
+
+[project.scripts]
+aero-run = "aeroloop.cli.run:main"

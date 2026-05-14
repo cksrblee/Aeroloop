@@ -35,3 +35,9 @@ class OpenAIAdapter(BaseLLMAdapter):
         formatted_messages = [(msg["role"], msg["content"]) for msg in messages]
         response = self.client.invoke(formatted_messages)
         return str(response.content)
+
+    def generate_structured(self, messages: List[Dict[str, str]], schema: Any, **kwargs) -> Any:
+        formatted_messages = [(msg["role"], msg["content"]) for msg in messages]
+        structured_llm = self.client.with_structured_output(schema)
+        response = structured_llm.invoke(formatted_messages)
+        return response

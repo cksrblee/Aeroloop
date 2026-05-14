@@ -1,10 +1,20 @@
-from .mission import RawMissionInput, MissionProfile, MissionParsingResult
+from .mission import MissionParsingInput, MissionProfile, MissionParsingResult
 from .requirement import CandidateRequirement, FinalRequirement, RequirementConflict, RequirementQualityReport, RequirementAnalysisResult
 from .certification import CertificationDocument, CertificationClause, CertificationQueryContext, ApplicabilityResult
 from .regulation import RegulationEvidence
 from .traceability import TraceLink
 from .workflow import WorkflowStage, WorkflowState, RequirementBlackboard
-from .common import Assumption, MissingField, ParsedFact, ErrorInfo
+from .common import (
+    Assumption, 
+    MissingField, 
+    ParsedFact,
+    ParsedConstraint,
+    Ambiguity,
+    EvidenceSpan,
+    RequirementSeed,
+    RuntimeMonitoringCandidate,
+    ErrorInfo
+)
 
 from .aircraft import AircraftCandidate
 from .engineering import SimulationParameterSet
@@ -16,7 +26,7 @@ from .traceability import TraceabilityMatrix
 
 __all__ = [
     # Mission
-    "RawMissionInput",
+    "MissionParsingInput",
     "MissionProfile",
     "MissionParsingResult",
     
@@ -46,6 +56,11 @@ __all__ = [
     "Assumption",
     "MissingField",
     "ParsedFact",
+    "ParsedConstraint",
+    "Ambiguity",
+    "EvidenceSpan",
+    "RequirementSeed",
+    "RuntimeMonitoringCandidate",
     "ErrorInfo",
     
     # Existing objects

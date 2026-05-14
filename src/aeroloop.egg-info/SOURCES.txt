@@ -4,6 +4,7 @@ src/aeroloop/__init__.py
 src/aeroloop.egg-info/PKG-INFO
 src/aeroloop.egg-info/SOURCES.txt
 src/aeroloop.egg-info/dependency_links.txt
+src/aeroloop.egg-info/entry_points.txt
 src/aeroloop.egg-info/requires.txt
 src/aeroloop.egg-info/top_level.txt
 src/aeroloop/agents/airspace_environment_agent.py
@@ -18,6 +19,8 @@ src/aeroloop/api/main.py
 src/aeroloop/api/routes_mission.py
 src/aeroloop/api/routes_report.py
 src/aeroloop/api/routes_simulation.py
+src/aeroloop/cli/__init__.py
+src/aeroloop/cli/run.py
 src/aeroloop/engineering/aircraft_template_library.py
 src/aeroloop/engineering/candidate_generator.py
 src/aeroloop/engineering/performance_engine.py
@@ -80,6 +83,7 @@ src/aeroloop/utils/geometry.py
 src/aeroloop/utils/ids.py
 src/aeroloop/utils/io.py
 src/aeroloop/utils/logging.py
+src/aeroloop/utils/prompt_provider.py
 src/aeroloop/utils/units.py
 src/aeroloop/verification/event_reporter.py
 src/aeroloop/verification/rule_compiler.py

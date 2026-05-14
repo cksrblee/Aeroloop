@@ -9,7 +9,7 @@ from aeroloop.agents.mission_parsing_agent import MissionParsingAgent
 from aeroloop.agents.orchestrator_agent import OrchestratorAgent
 from aeroloop.agents.requirement_reasoning_agent import RequirementReasoningAgent
 from aeroloop.schemas.certification import CertificationQueryContext
-from aeroloop.schemas.mission import MissionProfile, RawMissionInput
+from aeroloop.schemas.mission import MissionProfile, MissionParsingInput
 from aeroloop.schemas.requirement import CandidateRequirement
 from aeroloop.schemas.workflow import RequirementBlackboard, WorkflowStage
 
@@ -20,20 +20,20 @@ class DummyLLM:
 
 
 @pytest.fixture
-def raw_mission_input() -> RawMissionInput:
-    return RawMissionInput(
-        input_id="input-001",
-        raw_text="Konkuk campus medical supply delivery mission under 120 m altitude.",
+def raw_mission_input() -> MissionParsingInput:
+    return MissionParsingInput(
+        mission_id="input-001",
+        raw_user_input="Konkuk campus medical supply delivery mission under 120 m altitude.",
         language="en",
         submitted_at=datetime(2026, 5, 14, 12, 0, 0),
     )
 
 
 @pytest.fixture
-def mission_profile(raw_mission_input: RawMissionInput) -> MissionProfile:
+def mission_profile(raw_mission_input: MissionParsingInput) -> MissionProfile:
     return MissionProfile(
         mission_id="mission-001",
-        raw_input_id=raw_mission_input.input_id,
+        raw_input_id=raw_mission_input.mission_id,
         operation_area="Konkuk campus",
         operation_type="medical_delivery",
         payload_kg=2.5,
@@ -66,7 +66,7 @@ def customer_candidate() -> CandidateRequirement:
     )
 
 
-def test_mission_parsing_agent_contract(raw_mission_input: RawMissionInput) -> None:
+def test_mission_parsing_agent_contract(raw_mission_input: MissionParsingInput) -> None:
     agent = MissionParsingAgent(llm_model=DummyLLM())
 
     assert agent.name == "Mission Parsing Agent"
@@ -130,7 +130,7 @@ def test_airspace_environment_agent_contract() -> None:
 
 
 def test_requirement_reasoning_agent_contract(
-    raw_mission_input: RawMissionInput,
+    raw_mission_input: MissionParsingInput,
     mission_profile: MissionProfile,
     customer_candidate: CandidateRequirement,
 ) -> None:
@@ -173,7 +173,7 @@ def test_orchestrator_routes_requirement_workflow_stages(
 
 
 def test_orchestrator_run_requirement_analysis_contract(
-    raw_mission_input: RawMissionInput,
+    raw_mission_input: MissionParsingInput,
 ) -> None:
     agent = OrchestratorAgent()
 
