@@ -1,0 +1,19 @@
+# LLM Pipeline Configuration
+llm:
+  default:
+    provider: "openai"
+    model: "gpt-4o-mini"
+    temperature: 0.1
+    max_tokens: 2048
+
+# 향후 각 에이전트별로 다른 모델을 매핑(라우팅)하고 싶을 때 사용하는 설정
+routing:
+  mission_parsing:
+    provider: "openai"
+    model: "gpt-4o-mini"
+    temperature: 0.0
+  report_generation:
+    # 예: 요약 및 보고서 생성 등 복잡한 태스크에는 더 큰 모델 할당 가능
+    provider: "openai"
+    model: "gpt-4o"
+    temperature: 0.3
