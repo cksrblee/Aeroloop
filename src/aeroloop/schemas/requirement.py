@@ -1,5 +1,6 @@
 from typing import Literal, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from datetime import datetime
 
 from .common import Assumption, MissingField
 from .mission import MissionProfile
@@ -71,9 +72,18 @@ class CandidateRequirement(BaseModel):
     unresolved_issues: list[str] = []
 
 class CustomerRequirementResult(BaseModel):
+    result_id: str
+    mission_id: str
+    agent_name: str = "CustomerRequirementAgent"
+    agent_version: str
+
     candidate_requirements: list[CandidateRequirement]
-    assumptions: list[Assumption]
-    unresolved_questions: list[str]
+
+    assumptions: list[Assumption] = Field(default_factory=list)
+    unresolved_questions: list[str] = Field(default_factory=list)
+    quality_flags: list[str] = Field(default_factory=list)
+
+    created_at: datetime
 
 
 class FinalRequirement(BaseModel):

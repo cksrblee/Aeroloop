@@ -6,7 +6,8 @@ from datetime import datetime
 
 from aeroloop.llm.adapters import OpenAIAdapter
 from aeroloop.agents.mission_parsing_agent import MissionParsingAgent
-from aeroloop.schemas.mission import MissionParsingInput
+from aeroloop.schemas.mission import MissionParsingInput, MissionProfile, MissionParsingResult
+from aeroloop.agents.customer_requirement_agent import CustomerRequirementAgent
 
 # Path to the demo requirements file (relative to working directory)
 DEMO_FILE = Path("demo_requirements.md")
@@ -91,6 +92,55 @@ def run_mission_agent(args):
         print(f"\n[ERROR] MissionParsingAgent failed: {e}")
         raise
 
+def run_customer_agent(args):
+    """Run the CustomerRequirementAgent on a previously parsed MissionProfile JSON file."""
+    print("Initializing CustomerRequirementAgent...")
+    agent = CustomerRequirementAgent()
+    
+    input_file = Path(args.input_file)
+    if not input_file.exists():
+        print(f"\n[ERROR] File not found: {input_file.absolute()}")
+        return
+
+    print(f"Loading parsed mission from: {input_file.absolute()}")
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        # We expect a MissionParsingResult JSON here
+        parsing_result = MissionParsingResult(**data)
+        mission_profile = parsing_result.mission_profile
+    except Exception as e:
+        print(f"\n[ERROR] Failed to load MissionProfile from {input_file.name}: {e}")
+        return
+
+    print("\n--- Running CustomerRequirementAgent ---")
+    try:
+        result = agent.analyze(mission_profile)
+        
+        agents_dir = ensure_agents_dir()
+        output_file = agents_dir / f"customer_requirements_result_{result.mission_id}.json"
+        
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(result.model_dump_json(indent=2))
+
+        print("\n[SUCCESS] Customer Requirement generation completed.")
+        print(f"Output saved to: {output_file.absolute()}")
+
+        # Print a short summary
+        print("\n--- Summary ---")
+        print(f"Mission ID                 : {result.mission_id}")
+        print(f"Candidate Requirements     : {len(result.candidate_requirements)}")
+        print(f"Assumptions                : {len(result.assumptions)}")
+        print(f"Unresolved Questions       : {len(result.unresolved_questions)}")
+        print(f"Quality Flags              : {len(result.quality_flags)}")
+        for req in result.candidate_requirements:
+            print(f"  - [{req.category}] {req.title} ({req.requirement_type})")
+            
+    except Exception as e:
+        print(f"\n[ERROR] CustomerRequirementAgent failed: {e}")
+        raise
+
 def main():
     parser = argparse.ArgumentParser(description="AeroLoop High-Level Agent Execution CLI")
     subparsers = parser.add_subparsers(dest="agent", help="Which agent to run")
@@ -107,10 +157,20 @@ def main():
         )
     )
 
+    # CustomerRequirementAgent subparser
+    customer_parser = subparsers.add_parser("customer", help="Run the CustomerRequirementAgent")
+    customer_parser.add_argument(
+        "input_file",
+        type=str,
+        help="Path to the JSON file containing the parsed MissionProfile (e.g. .agents/mission_parsing_result_xxx.json)"
+    )
+
     args = parser.parse_args()
 
     if args.agent == "mission":
         run_mission_agent(args)
+    elif args.agent == "customer":
+        run_customer_agent(args)
     else:
         print(f"Unknown agent: {args.agent}")
 
