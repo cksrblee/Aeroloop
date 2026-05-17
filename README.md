@@ -22,6 +22,43 @@ conda deactivate && conda activate aero
 
 ---
 
+## Langfuse Prompt Registration
+
+`scripts/register_prompts.py` registers the default prompts used by AeroLoop agents.
+
+Required Langfuse environment variables:
+
+```bash
+conda env config vars set LANGFUSE_PUBLIC_KEY="pk-lf-..."
+conda env config vars set LANGFUSE_SECRET_KEY="sk-lf-..."
+conda env config vars set LANGFUSE_HOST="https://cloud.langfuse.com"
+conda deactivate && conda activate aero
+```
+
+Register prompts from the `aero` conda environment:
+
+```bash
+conda activate aero
+python scripts/register_prompts.py
+```
+
+To verify the registration payload without calling Langfuse:
+
+```bash
+python scripts/register_prompts.py --dry-run
+```
+
+Registered prompt names:
+
+| Prompt | Label |
+|---|---|
+| `aeroloop/mission-parsing-agent` | `staging` |
+| `aeroloop/customer-requirement-agent` | `staging` |
+
+Use `--label <label>` to register a different Langfuse label.
+
+---
+
 ## CLI: `aero-run`
 
 각 에이전트를 개별적으로 실행하고 결과를 `.agents/` 디렉토리에 저장합니다.
