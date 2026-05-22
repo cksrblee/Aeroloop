@@ -93,19 +93,47 @@ The output must strictly follow the schema structure provided.
             raise ValueError("LLM model is not configured for MissionParsingAgent.")
 
         # 2. Call LLM to get structured response
-        try:
-            result = self.llm_model.generate_structured(messages, MissionParsingResult)
-            
-            # Ensure the input references match
-            if result.mission_id != raw_input.mission_id:
-                result.mission_id = raw_input.mission_id
-            if result.raw_input != raw_input.raw_user_input:
-                result.raw_input = raw_input.raw_user_input
+        max_iterations = 5
+        for iteration in range(max_iterations):
+            try:
+                result = self.llm_model.generate_structured(messages, MissionParsingResult)
                 
-            return result
-        except Exception as e:
-            # Fallback or re-raise
-            raise RuntimeError(f"Failed to parse mission using LLM: {str(e)}")
+                # Ensure the input references match
+                if result.mission_id != raw_input.mission_id:
+                    result.mission_id = raw_input.mission_id
+                if result.raw_input != raw_input.raw_user_input:
+                    result.raw_input = raw_input.raw_user_input
+                
+                # If there are no missing fields, we're done
+                if not result.missing_fields:
+                    return result
+                
+                # If there are missing fields, ask the user interactively
+                print(f"\n[MissionParsingAgent] Missing information detected ({len(result.missing_fields)} fields).")
+                for mf in result.missing_fields:
+                    print(f"  - {mf.field_name}: {mf.suggested_question}")
+                
+                user_answer = input("\n[User] Provide missing info (or type 'skip' to ignore): ")
+                
+                if user_answer.strip().lower() == 'skip':
+                    return result
+                
+                # Append assistant's last state and user's answer to messages
+                messages.append({
+                    "role": "assistant",
+                    "content": result.model_dump_json()
+                })
+                messages.append({
+                    "role": "user",
+                    "content": f"Here is the missing information: {user_answer}"
+                })
+                
+            except Exception as e:
+                # Fallback or re-raise
+                raise RuntimeError(f"Failed to parse mission using LLM: {str(e)}")
+        
+        # If max_iterations is reached, return whatever we have
+        return result
 
     def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
