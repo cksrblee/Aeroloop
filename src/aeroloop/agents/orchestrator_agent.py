@@ -34,6 +34,7 @@ class OrchestratorAgent:
         # 2. Linear Progression if no errors
         mission_profile = state.get("mission_profile")
         candidate_reqs = state.get("candidate_requirements", [])
+        cert_result = state.get("certification_compliance_result")
         
         if not mission_profile:
             return {"next_node": "mission_parsing", "status": "running"}
@@ -41,8 +42,20 @@ class OrchestratorAgent:
         if not candidate_reqs:
             return {"next_node": "customer_requirement", "status": "running"}
             
-        # If we have both, for the sake of the current scope, we finish.
-        # Future agents (certification, config_design) would be added here.
+        if not cert_result:
+            return {"next_node": "certification_compliance", "status": "running"}
+            
+        # 3. Certification Quality Report Routing
+        quality_report = cert_result.quality_report
+        
+        if quality_report.readiness_level == "needs_configuration_detail":
+            # In a real workflow, we'd route to a design node. For now, stop and ask for human input.
+            return {"next_node": "END", "status": "paused_for_input", "feedback_history": ["Please provide detailed AircraftConcept for further certification mapping."]}
+            
+        if quality_report.readiness_level == "needs_human_certification_review":
+            return {"next_node": "END", "status": "paused_for_review", "feedback_history": ["Human certification expert review required."]}
+            
+        # preliminary or ready_for_concept_review means success for this phase.
         return {"next_node": "END", "status": "completed"}
 
     def route_edge(self, state: WorkflowState) -> str:

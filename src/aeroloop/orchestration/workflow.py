@@ -3,6 +3,7 @@ from aeroloop.orchestration.state import WorkflowState
 from aeroloop.agents.orchestrator_agent import OrchestratorAgent
 from aeroloop.agents.mission_parsing_agent import MissionParsingAgent
 from aeroloop.agents.customer_requirement_agent import CustomerRequirementAgent
+from aeroloop.agents.certification_compliance_agent import CertificationComplianceAgent
 from aeroloop.llm.adapters import OpenAIAdapter
 from aeroloop.schemas.mission import MissionParsingInput
 from datetime import datetime
@@ -12,6 +13,7 @@ from datetime import datetime
 llm_adapter = OpenAIAdapter(model_name="gpt-4o-mini", temperature=0.0)
 mission_agent = MissionParsingAgent(llm_model=llm_adapter)
 customer_agent = CustomerRequirementAgent()
+cert_agent = CertificationComplianceAgent()
 orchestrator_agent = OrchestratorAgent()
 
 def mission_parsing_node(state: WorkflowState):
@@ -60,6 +62,38 @@ def customer_requirement_node(state: WorkflowState):
     except Exception as e:
         return {"status": "error", "feedback_history": [f"Customer requirement failed: {str(e)}"]}
 
+def certification_compliance_node(state: WorkflowState):
+    mission_profile = state.get("mission_profile")
+    customer_reqs = state.get("candidate_requirements", [])
+    aircraft_concept = state.get("aircraft_concept")
+    
+    if not mission_profile or not customer_reqs:
+        return {"status": "error", "feedback_history": ["Missing mission_profile or customer_reqs for certification_compliance"]}
+        
+    try:
+        from aeroloop.schemas.compliance import CertificationComplianceInput
+        from aeroloop.schemas.certification import CertificationSourcePolicy
+        
+        comp_input = CertificationComplianceInput(
+            run_id=state.get("run_id", "unknown_run"),
+            mission_profile=mission_profile,
+            customer_requirements=customer_reqs,
+            aircraft_concept=aircraft_concept,
+            certification_source_policy=CertificationSourcePolicy(
+                allowed_source_families=["SC_VTOL_SMALL", "SMALL_ROTORCRAFT", "SMALL_AIRCRAFT"],
+                allowed_authorities=["EASA", "FAA", "KAS"]
+            )
+        )
+        
+        result = cert_agent.analyze(comp_input)
+        
+        return {
+            "certification_compliance_result": result,
+            "status": "running"
+        }
+    except Exception as e:
+        return {"status": "error", "feedback_history": [f"Certification compliance failed: {str(e)}"]}
+
 def orchestrator_node(state: WorkflowState):
     return orchestrator_agent(state)
 
@@ -75,11 +109,13 @@ def create_workflow():
     # Add nodes
     workflow.add_node("mission_parsing", mission_parsing_node)
     workflow.add_node("customer_requirement", customer_requirement_node)
+    workflow.add_node("certification_compliance", certification_compliance_node)
     workflow.add_node("orchestrator", orchestrator_node)
     
     # All agent nodes route back to the orchestrator to decide the next step
     workflow.add_edge("mission_parsing", "orchestrator")
     workflow.add_edge("customer_requirement", "orchestrator")
+    workflow.add_edge("certification_compliance", "orchestrator")
     
     # Initial edge routes to orchestrator which will decide what to do
     workflow.add_edge(START, "orchestrator")
@@ -91,6 +127,7 @@ def create_workflow():
         {
             "mission_parsing": "mission_parsing",
             "customer_requirement": "customer_requirement",
+            "certification_compliance": "certification_compliance",
             "END": END
         }
     )

@@ -4,6 +4,8 @@ from aeroloop.schemas.mission import MissionProfile, MissionParsingInput
 from aeroloop.schemas.requirement import CandidateRequirement, FinalRequirement, RequirementConflict
 from aeroloop.schemas.common import Assumption, ErrorInfo
 from aeroloop.schemas.regulation import RegulationEvidence
+from aeroloop.schemas.compliance import CertificationComplianceResult
+from aeroloop.schemas.aircraft import AircraftConcept
 
 def add_items(a: list | None, b: list | None) -> list:
     """Merge two lists safely for LangGraph state."""
@@ -21,6 +23,8 @@ class WorkflowState(TypedDict):
     run_id: str
     raw_input: MissionParsingInput
     mission_profile: MissionProfile | None
+    aircraft_concept: AircraftConcept | None
+    certification_compliance_result: CertificationComplianceResult | None
     
     candidate_requirements: Annotated[list[CandidateRequirement], add_items]
     final_requirements: Annotated[list[FinalRequirement], add_items]
