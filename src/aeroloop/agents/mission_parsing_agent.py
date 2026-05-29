@@ -96,6 +96,7 @@ The output must strictly follow the schema structure provided.
         max_iterations = 5
         for iteration in range(max_iterations):
             try:
+                print(f"\n[MissionParsingAgent] Analyzing mission (Iteration {iteration + 1}/{max_iterations}). Please wait...")
                 result = self.llm_model.generate_structured(messages, MissionParsingResult)
                 
                 # Ensure the input references match

@@ -141,6 +141,53 @@ def run_customer_agent(args):
         print(f"\n[ERROR] CustomerRequirementAgent failed: {e}")
         raise
 
+def run_workflow(args):
+    """Run the entire bidirectional LangGraph workflow."""
+    from aeroloop.orchestration.workflow import create_workflow
+    from aeroloop.schemas.mission import MissionParsingInput
+    import uuid
+    
+    print("Initializing LangGraph Workflow...")
+    app = create_workflow()
+    
+    raw_text = load_mission_text(args.text)
+    
+    initial_state = {
+        "run_id": f"RUN-{uuid.uuid4().hex[:8]}",
+        "raw_input": MissionParsingInput(
+            mission_id=f"mission_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            raw_user_input=raw_text
+        ),
+        "mission_profile": None,
+        "status": "running"
+    }
+    
+    print("\n--- Starting Bidirectional Workflow ---")
+    try:
+        # We use recursion_limit to prevent infinite loops during bidirectional routing
+        config = {"recursion_limit": 20}
+        for s in app.stream(initial_state, config=config):
+            node_name = list(s.keys())[0]
+            print(f"\n[Node Execution: {node_name}]")
+            state_update = s[node_name]
+            
+            if "status" in state_update:
+                print(f"  Status: {state_update['status']}")
+            if "next_node" in state_update:
+                print(f"  Routing -> {state_update['next_node']}")
+            if "feedback_history" in state_update and state_update["feedback_history"]:
+                print(f"  Feedback: {state_update['feedback_history'][-1]}")
+            
+            # Print intermediate results for visibility
+            if "candidate_requirements" in state_update and state_update["candidate_requirements"]:
+                print(f"  Generated {len(state_update['candidate_requirements'])} candidate requirements.")
+        
+        print("\n[SUCCESS] Workflow execution completed.")
+    except Exception as e:
+        print(f"\n[ERROR] Workflow failed: {e}")
+        raise
+
+
 def main():
     parser = argparse.ArgumentParser(description="AeroLoop High-Level Agent Execution CLI")
     subparsers = parser.add_subparsers(dest="agent", help="Which agent to run")
@@ -165,12 +212,22 @@ def main():
         help="Path to the JSON file containing the parsed MissionProfile (e.g. .agents/mission_parsing_result_xxx.json)"
     )
 
+    # Workflow subparser
+    workflow_parser = subparsers.add_parser("workflow", help="Run the Bidirectional LangGraph Workflow")
+    workflow_parser.add_argument(
+        "text",
+        type=str,
+        help="The natural language mission description. Pass 'demo' to load from demo_requirements.md."
+    )
+
     args = parser.parse_args()
 
     if args.agent == "mission":
         run_mission_agent(args)
     elif args.agent == "customer":
         run_customer_agent(args)
+    elif args.agent == "workflow":
+        run_workflow(args)
     else:
         print(f"Unknown agent: {args.agent}")
 

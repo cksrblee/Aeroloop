@@ -99,24 +99,38 @@ Output saved to: .agents/mission_parsing_result_mission_20260514_170737.json
 
 ---
 
-## 에이전트 파이프라인
+## 에이전트 파이프라인 (Bidirectional LangGraph)
 
-```
+AeroLoop는 단순 선형적인 파이프라인이 아닌 **양방향 상태 기반 그래프(StateGraph)** 구조를 채택하고 있습니다. 
+`Orchestrator Agent`가 중앙 라우터(Hub) 역할을 수행하여, 각 에이전트의 실행 결과를 평가하고 다음 실행할 노드(Agent)를 결정합니다. 정보가 누락되거나 제약조건이 충돌하는 경우 이전 단계로 돌아가서(예: 요구도 분석 -> 임무 분석) 문제를 스스로 해결하는 피드백 루프를 지원합니다.
+
+```text
 자연어 임무 입력
-    ↓
-MissionParsingAgent          ← 구현 완료
-    ↓
-CustomerRequirementAgent     ← 개발 예정
-    ↓
-CertificationRequirementAgent
-    ↓
-AirspaceEnvironmentAgent
-    ↓
-RequirementReasoningAgent
-    ↓
-3D Flight Simulation
-    ↓
-Runtime Requirement Verification
+       ↓
+    [START]
+       ↓
++-------------------+
+| Orchestrator (Hub)| <----+
++-------------------+      | (상태 평가 및 라우팅 / 건너뛰기, 되돌아가기 지원)
+  |   |   |   |   |        |
+  v   v   v   v   v        |
+ [Mission Parsing] --------+
+ [Customer Req]    --------+
+ [Certification]   --------+
+ [Config Design]   --------+
+ [Simulation]      --------+
+       ↓
+     [END]
+```
+
+### Workflow 실행
+
+새로 도입된 `workflow` 명령어를 통해 전체 양방향 그래프를 실행할 수 있습니다:
+
+```bash
+aero-run workflow "건국대 캠퍼스 안에서 2명이 탑승하는 eVTOL..."
+# 또는
+aero-run workflow "demo"
 ```
 
 ---
