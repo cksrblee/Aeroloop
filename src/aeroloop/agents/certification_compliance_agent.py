@@ -128,17 +128,35 @@ Return only valid JSON matching the CertificationComplianceResult schema.
         # TODO: Implement the final LLM reasoning step using the deterministic outputs
         # and validate via Pydantic matching the CertificationComplianceResult schema.
         
-        # Note on scoring for Langfuse (must be tracked separately via callbacks):
-        # - schema_validity
-        # - db_groundedness
-        # - ccl_coverage
-        # - moc_mapping_completeness
-        # - hallucinated_clause_count (Must be 0)
-        # - human_review_item_count
-        # - simulation_supported_moc_count
-        # - traceability_coverage_ratio
-
-        raise NotImplementedError("The final result composition step is not yet implemented.")
+        # Return a dummy result for pipeline integration testing
+        from aeroloop.schemas.compliance import CertificationComplianceQualityReport
+        from aeroloop.utils.ids import make_id
+        
+        return CertificationComplianceResult(
+            result_id=make_id("CERT-COMP"),
+            run_id=input_data.run_id,
+            mission_id=getattr(input_data.mission_profile, "mission_id", input_data.run_id),
+            agent_version="v0.1.0",
+            schema_version="v0.1.0",
+            certification_basis_candidates=basis_candidates,
+            retrieved_clauses=clauses,
+            ccl_items=ccl_items,
+            moc_plans=moc_plans,
+            requirement_links=trace_links,
+            conflicts=[],
+            unresolved_questions=["Dummy question for pipeline test"],
+            assumptions=["Dummy assumption for pipeline test"],
+            quality_report=CertificationComplianceQualityReport(
+                total_basis_candidates=len(basis_candidates),
+                total_retrieved_clauses=len(clauses),
+                total_ccl_items=len(ccl_items),
+                included_items=0, excluded_items=0, tbd_items=len(ccl_items), human_review_items=0,
+                total_moc_plans=len(moc_plans), flight_test_required_count=0, simulation_supported_count=0,
+                analysis_supported_count=0, traceability_coverage_ratio=0.0,
+                readiness_level="preliminary",
+                summary="Dummy result for pipeline integration test."
+            )
+        )
 
     def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """

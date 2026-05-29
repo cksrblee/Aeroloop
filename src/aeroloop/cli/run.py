@@ -8,6 +8,9 @@ from aeroloop.llm.adapters import OpenAIAdapter
 from aeroloop.agents.mission_parsing_agent import MissionParsingAgent
 from aeroloop.schemas.mission import MissionParsingInput, MissionProfile, MissionParsingResult
 from aeroloop.agents.customer_requirement_agent import CustomerRequirementAgent
+from aeroloop.agents.certification_compliance_agent import CertificationComplianceAgent
+from aeroloop.schemas.compliance import CertificationComplianceInput
+from aeroloop.schemas.certification import CertificationSourcePolicy
 
 # Path to the demo requirements file (relative to working directory)
 DEMO_FILE = Path("demo_requirements.md")
@@ -141,6 +144,63 @@ def run_customer_agent(args):
         print(f"\n[ERROR] CustomerRequirementAgent failed: {e}")
         raise
 
+def run_certification_agent(args):
+    """Run the CertificationComplianceAgent on a previously parsed CustomerRequirementResult."""
+    print("Initializing CertificationComplianceAgent...")
+    agent = CertificationComplianceAgent()
+    
+    input_file = Path(args.input_file)
+    if not input_file.exists():
+        print(f"\n[ERROR] File not found: {input_file.absolute()}")
+        return
+
+    print(f"Loading customer requirements from: {input_file.absolute()}")
+    try:
+        from aeroloop.schemas.requirement import CustomerRequirementResult
+        from aeroloop.schemas.mission import MissionProfile
+        
+        with open(input_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        req_result = CustomerRequirementResult(**data)
+        mission_profile = MissionProfile(mission_id=req_result.mission_id)
+        
+        comp_input = CertificationComplianceInput(
+            run_id=req_result.mission_id,
+            mission_profile=mission_profile,
+            customer_requirements=req_result.candidate_requirements,
+            certification_source_policy=CertificationSourcePolicy(
+                allowed_source_families=["SC_VTOL_SMALL", "SMALL_ROTORCRAFT", "SMALL_AIRCRAFT"],
+                allowed_authorities=["EASA", "FAA", "KAS"]
+            )
+        )
+    except Exception as e:
+        print(f"\n[ERROR] Failed to load inputs from {input_file.name}: {e}")
+        return
+
+    print("\n--- Running CertificationComplianceAgent ---")
+    try:
+        result = agent.analyze(comp_input)
+        
+        agents_dir = ensure_agents_dir()
+        output_file = agents_dir / f"certification_compliance_result_{result.mission_id}.json"
+        
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(result.model_dump_json(indent=2))
+
+        print("\n[SUCCESS] Certification Compliance generation completed.")
+        print(f"Output saved to: {output_file.absolute()}")
+
+        print("\n--- Summary ---")
+        print(f"Mission ID                 : {result.mission_id}")
+        print(f"CCL Items                  : {len(result.ccl_items)}")
+        print(f"MoC Plans                  : {len(result.moc_plans)}")
+        print(f"Readiness Level            : {result.quality_report.readiness_level}")
+            
+    except Exception as e:
+        print(f"\n[ERROR] CertificationComplianceAgent failed: {e}")
+        raise
+
 def run_workflow(args):
     """Run the entire bidirectional LangGraph workflow."""
     from aeroloop.orchestration.workflow import create_workflow
@@ -212,6 +272,14 @@ def main():
         help="Path to the JSON file containing the parsed MissionProfile (e.g. .agents/mission_parsing_result_xxx.json)"
     )
 
+    # CertificationComplianceAgent subparser
+    certification_parser = subparsers.add_parser("certification", help="Run the CertificationComplianceAgent")
+    certification_parser.add_argument(
+        "input_file",
+        type=str,
+        help="Path to the JSON file containing the CustomerRequirementResult (e.g. .agents/customer_requirements_result_xxx.json)"
+    )
+
     # Workflow subparser
     workflow_parser = subparsers.add_parser("workflow", help="Run the Bidirectional LangGraph Workflow")
     workflow_parser.add_argument(
@@ -226,6 +294,8 @@ def main():
         run_mission_agent(args)
     elif args.agent == "customer":
         run_customer_agent(args)
+    elif args.agent == "certification":
+        run_certification_agent(args)
     elif args.agent == "workflow":
         run_workflow(args)
     else:
