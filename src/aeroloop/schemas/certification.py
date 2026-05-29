@@ -88,3 +88,45 @@ class CertificationSourcePolicy(BaseModel):
 
     strict_db_only: bool = True
     allow_cross_reference: bool = True
+
+# Legacy classes for backward compatibility
+class CertificationDocument(BaseModel):
+    document_id: str
+    title: str
+    authority: str
+    jurisdiction: str
+    version: Optional[str] = None
+    issue_date: Optional[str] = None
+    document_type: str
+    aircraft_categories: List[str] = []
+    source_path: Optional[str] = None
+    source_url: Optional[str] = None
+
+class CertificationQueryContext(BaseModel):
+    jurisdiction_hint: Optional[str] = None
+    aircraft_category_hint: Optional[str] = None
+    operation_type_hint: Optional[str] = None
+    candidate_aircraft_type: Optional[str] = None
+
+class ApplicabilityResult(BaseModel):
+    applicability_id: str
+    clause_id: str
+    mission_id: str
+    applicability: Literal[
+        "applicable",
+        "potentially_applicable",
+        "unclear",
+        "not_applicable"
+    ]
+    confidence: float
+    reason: str
+    required_follow_up: List[str] = []
+
+from .requirement import CandidateRequirement
+from .regulation import RegulationEvidence
+
+class CertificationRequirementResult(BaseModel):
+    candidate_requirements: List[CandidateRequirement]
+    regulation_evidence: List[RegulationEvidence]
+    applicability_results: List[ApplicabilityResult]
+    unresolved_certification_questions: List[str]
