@@ -76,7 +76,7 @@ Do not include explanations outside JSON.
 """
 
     @observe()
-    def analyze(self, mission_profile: MissionProfile) -> CustomerRequirementResult:
+    def analyze(self, mission_profile: MissionProfile, mission_id: str | None = None) -> CustomerRequirementResult:
         """
         Analyzes the MissionProfile to generate customer-specific and operational requirements.
         """
@@ -143,7 +143,7 @@ Do not include explanations outside JSON.
 
         return CustomerRequirementResult(
             result_id=make_id("CUST-REQ-RESULT"),
-            mission_id=mission_profile.mission_id if hasattr(mission_profile, "mission_id") else "UNKNOWN_MISSION",
+            mission_id=mission_id if mission_id else (getattr(mission_profile, "mission_id", "UNKNOWN_MISSION")),
             agent_version=self.agent_version,
             candidate_requirements=candidates,
             assumptions=assumptions,

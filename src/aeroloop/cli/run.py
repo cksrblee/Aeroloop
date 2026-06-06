@@ -18,7 +18,7 @@ DEMO_FILE = Path("demo_requirements.md")
 def init_adapter():
     """Initialize the OpenAI Adapter with standard configuration."""
     # The adapter will pick up OPENAI_API_KEY from environment variables automatically
-    return OpenAIAdapter(model_name="gpt-4o-mini", temperature=0.0)
+    return OpenAIAdapter(model_name="gpt-5.4-mini", temperature=0.0)
 
 def ensure_agents_dir():
     """Ensure the .agents/ output directory exists."""
@@ -113,13 +113,14 @@ def run_customer_agent(args):
         # We expect a MissionParsingResult JSON here
         parsing_result = MissionParsingResult(**data)
         mission_profile = parsing_result.mission_profile
+        mission_id_str = parsing_result.mission_id
     except Exception as e:
         print(f"\n[ERROR] Failed to load MissionProfile from {input_file.name}: {e}")
         return
 
     print("\n--- Running CustomerRequirementAgent ---")
     try:
-        result = agent.analyze(mission_profile)
+        result = agent.analyze(mission_profile, mission_id=mission_id_str)
         
         agents_dir = ensure_agents_dir()
         output_file = agents_dir / f"customer_requirements_result_{result.mission_id}.json"
@@ -163,15 +164,38 @@ def run_certification_agent(args):
             data = json.load(f)
             
         req_result = CustomerRequirementResult(**data)
-        mission_profile = MissionProfile(mission_id=req_result.mission_id)
+        
+        # Attempt to load corresponding MissionProfile
+        mission_file = input_file.parent / f"mission_parsing_result_{req_result.mission_id}.json"
+        if mission_file.exists():
+            with open(mission_file, "r", encoding="utf-8") as mf:
+                m_data = json.load(mf)
+                mission_profile = MissionProfile(**m_data.get("mission_profile", {}))
+        else:
+            mission_profile = MissionProfile(mission_id=req_result.mission_id)
+            
+        from aeroloop.schemas.aircraft import AircraftConcept
+        concept = AircraftConcept(
+            concept_id="eVTOL-CONCEPT-01",
+            aircraft_type="evtol",
+            mtow_kg=3000.0,
+            passenger_count=4,
+            propulsion_type="electric",
+            number_of_motors=8,
+            number_of_lift_units=8,
+            has_wing=True,
+            vertical_takeoff_landing=True,
+            intended_operation="urban_air_mobility"
+        )
         
         comp_input = CertificationComplianceInput(
             run_id=req_result.mission_id,
             mission_profile=mission_profile,
             customer_requirements=req_result.candidate_requirements,
+            aircraft_concept=concept,
             certification_source_policy=CertificationSourcePolicy(
                 allowed_source_families=["SC_VTOL_SMALL", "SMALL_ROTORCRAFT", "SMALL_AIRCRAFT"],
-                allowed_authorities=["EASA", "FAA", "KAS"]
+                allowed_authorities=["EASA", "FAA"]
             )
         )
     except Exception as e:

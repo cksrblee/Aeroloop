@@ -12,7 +12,7 @@ except ImportError:
 
 class OpenAIAdapter(BaseLLMAdapter):
     """
-    OpenAI 모델(gpt-4o-mini 등)을 사용하기 위한 구체화된 어댑터입니다.
+    OpenAI 모델(gpt-5.4-mini 등)을 사용하기 위한 구체화된 어댑터입니다.
     """
     def _initialize_client(self) -> Any:
         api_key = os.getenv("OPENAI_API_KEY")

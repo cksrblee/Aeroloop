@@ -32,6 +32,7 @@ class WorkflowState(TypedDict):
     conflicts: Annotated[list[RequirementConflict], add_items]
     assumptions: Annotated[list[Assumption], add_items]
     errors: Annotated[list[ErrorInfo], add_items]
+    unresolved_questions: Annotated[list[str], add_items]
     
     # Bidirectional Routing Variables
     feedback_history: Annotated[list[str], add_items]

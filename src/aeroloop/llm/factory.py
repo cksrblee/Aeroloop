@@ -14,7 +14,7 @@ class LLMFactory:
         
         Args:
             provider (str): "openai", "anthropic", "gemini", "local" 등
-            model_name (str): 사용할 실제 모델명 (예: "gpt-4o-mini")
+            model_name (str): 사용할 실제 모델명 (예: "gpt-5.4-mini")
             temperature (float): 생성 온도
             
         Returns:
@@ -40,7 +40,7 @@ class LLMFactory:
         YAML 등의 설정 딕셔너리로부터 직접 어댑터를 생성합니다.
         """
         provider = config_dict.get("provider", "openai")
-        model_name = config_dict.get("model", "gpt-4o-mini")
+        model_name = config_dict.get("model", "gpt-5.4-mini")
         temperature = config_dict.get("temperature", 0.0)
         
         return LLMFactory.create(

@@ -42,6 +42,10 @@ class OrchestratorAgent:
         if not candidate_reqs:
             return {"next_node": "customer_requirement", "status": "running"}
             
+        unresolved_questions = state.get("unresolved_questions", [])
+        if unresolved_questions:
+            return {"next_node": "config_design", "status": "running", "feedback_history": ["Unresolved questions detected. Routing to Config Design / HITL agent."]}
+            
         if not cert_result:
             return {"next_node": "certification_compliance", "status": "running"}
             
@@ -49,8 +53,7 @@ class OrchestratorAgent:
         quality_report = cert_result.quality_report
         
         if quality_report.readiness_level == "needs_configuration_detail":
-            # In a real workflow, we'd route to a design node. For now, stop and ask for human input.
-            return {"next_node": "END", "status": "paused_for_input", "feedback_history": ["Please provide detailed AircraftConcept for further certification mapping."]}
+            return {"next_node": "config_design", "status": "running", "feedback_history": ["Please provide detailed AircraftConcept for further certification mapping."]}
             
         if quality_report.readiness_level == "needs_human_certification_review":
             return {"next_node": "END", "status": "paused_for_review", "feedback_history": ["Human certification expert review required."]}

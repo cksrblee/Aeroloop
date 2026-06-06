@@ -91,8 +91,8 @@ graph TD
 다양한 LLM 프로바이더(OpenAI, Anthropic, 오픈소스 로컬 모델 등)를 손쉽게 교체 및 확장하기 위해 팩토리 및 어댑터 패턴을 도입했습니다.
 
 * `BaseLLMAdapter`: 모든 LLM 클라이언트가 지켜야 할 일관된 인터페이스를 제공.
-* `OpenAIAdapter`: Langchain의 `ChatOpenAI`를 감싸 `gpt-4o-mini` 등을 실행할 수 있도록 하는 구현체.
+* `OpenAIAdapter`: Langchain의 `ChatOpenAI`를 감싸 `gpt-5.4-mini` 등을 실행할 수 있도록 하는 구현체.
 * `LLMFactory`: `model.yaml`의 설정을 읽고, 상황에 맞는 어댑터를 런타임에 동적으로 주입(Inject)합니다.
 
 **적용 사례 (`BaseAIAgent`):**
-에이전트는 코드 내부에서 LLM을 강결합하지 않고, 생성 시 전달되는 설정값(`model_config`)을 통해 유연하게 모델을 사용할 수 있습니다. 이를 통해 간단한 텍스트 파싱은 `gpt-4o-mini`에, 정교한 보고서 생성은 더 큰 파라미터를 가진 모델에 맡기는 방식의 개별 라우팅이 가능해집니다.
+에이전트는 코드 내부에서 LLM을 강결합하지 않고, 생성 시 전달되는 설정값(`model_config`)을 통해 유연하게 모델을 사용할 수 있습니다. 이를 통해 간단한 텍스트 파싱은 `gpt-5.4-mini`에, 정교한 보고서 생성은 더 큰 파라미터를 가진 모델에 맡기는 방식의 개별 라우팅이 가능해집니다.

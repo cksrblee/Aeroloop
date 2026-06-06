@@ -218,3 +218,59 @@ def test_runtime_verification_linkage():
         assert result.moc_plans[0].primary_method == "simulation"
         assert result.moc_plans[0].poc_support_level == "supported_as_preliminary_evidence"
         assert result.ccl_items[0].compliance_status == "supported_by_poc"
+
+import json
+import os
+from pathlib import Path
+
+def test_real_data_execution():
+    # Load mission profile from .agents
+    agents_dir = Path(".agents")
+    mission_json_path = None
+    for p in agents_dir.glob("mission_parsing_result_*.json"):
+        mission_json_path = p
+        break
+        
+    if not mission_json_path or not mission_json_path.exists():
+        pytest.skip("No mission parsing result found in .agents directory")
+        
+    with open(mission_json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        
+    mission_profile = MissionProfile(**data.get("mission_profile", {}))
+    
+    # Concept with distributed electric propulsion
+    concept = AircraftConcept(
+        concept_id="eVTOL-CONCEPT-01",
+        aircraft_type="evtol",
+        mtow_kg=3000.0,
+        passenger_count=4,
+        crew_count=1,
+        propulsion_type="electric",
+        number_of_motors=8,
+        number_of_lift_units=8,
+        has_wing=True,
+        vertical_takeoff_landing=True,
+        intended_operation="urban_air_mobility"
+    )
+    
+    input_data = CertificationComplianceInput(
+        run_id="run_test_integration",
+        mission_profile=mission_profile,
+        customer_requirements=[],
+        aircraft_concept=concept,
+        certification_source_policy=CertificationSourcePolicy(
+            allowed_source_families=["SC_VTOL_SMALL", "SMALL_ROTORCRAFT", "SMALL_AIRCRAFT"],
+            allowed_authorities=["EASA", "FAA"]
+        )
+    )
+    
+    agent = CertificationComplianceAgent()
+    result = agent.analyze(input_data)
+    
+    # Assertions
+    assert isinstance(result, CertificationComplianceResult)
+    assert result.quality_report.total_ccl_items > 0
+    # The loops should fallback for this ambiguous concept, resulting in needs_human_certification_review
+    assert result.quality_report.readiness_level == "needs_human_certification_review"
+    assert any("Fallback triggered" in q for q in result.unresolved_questions)

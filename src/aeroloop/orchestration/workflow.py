@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Initialize singletons / agents
 # We can inject these later, but for simplicity we instantiate them here.
-llm_adapter = OpenAIAdapter(model_name="gpt-4o-mini", temperature=0.0)
+llm_adapter = OpenAIAdapter(model_name="gpt-5.4-mini", temperature=0.0)
 mission_agent = MissionParsingAgent(llm_model=llm_adapter)
 customer_agent = CustomerRequirementAgent()
 cert_agent = CertificationComplianceAgent()
@@ -57,6 +57,7 @@ def customer_requirement_node(state: WorkflowState):
         return {
             "candidate_requirements": result.candidate_requirements,
             "assumptions": result.assumptions,
+            "unresolved_questions": result.unresolved_questions,
             "status": "running"
         }
     except Exception as e:
@@ -94,6 +95,13 @@ def certification_compliance_node(state: WorkflowState):
     except Exception as e:
         return {"status": "error", "feedback_history": [f"Certification compliance failed: {str(e)}"]}
 
+def config_design_node(state: WorkflowState):
+    """
+    Placeholder node for the Config Design Agent.
+    It will handle unresolved_questions or needs_configuration_detail scenarios.
+    """
+    return {"status": "paused_for_input", "feedback_history": ["Config Design Agent not implemented yet. Pausing for human input."]}
+
 def orchestrator_node(state: WorkflowState):
     return orchestrator_agent(state)
 
@@ -110,12 +118,14 @@ def create_workflow():
     workflow.add_node("mission_parsing", mission_parsing_node)
     workflow.add_node("customer_requirement", customer_requirement_node)
     workflow.add_node("certification_compliance", certification_compliance_node)
+    workflow.add_node("config_design", config_design_node)
     workflow.add_node("orchestrator", orchestrator_node)
     
     # All agent nodes route back to the orchestrator to decide the next step
     workflow.add_edge("mission_parsing", "orchestrator")
     workflow.add_edge("customer_requirement", "orchestrator")
     workflow.add_edge("certification_compliance", "orchestrator")
+    workflow.add_edge("config_design", "orchestrator")
     
     # Initial edge routes to orchestrator which will decide what to do
     workflow.add_edge(START, "orchestrator")
@@ -128,6 +138,7 @@ def create_workflow():
             "mission_parsing": "mission_parsing",
             "customer_requirement": "customer_requirement",
             "certification_compliance": "certification_compliance",
+            "config_design": "config_design",
             "END": END
         }
     )
