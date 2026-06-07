@@ -1,6 +1,7 @@
 import chromadb
 from chromadb.config import Settings
 import os
+from aeroloop.config import config
 
 class KnowledgeBase:
     """
@@ -9,10 +10,11 @@ class KnowledgeBase:
     """
     _instance = None
 
-    def __new__(cls, persist_directory=".agents/vector_db"):
+    def __new__(cls, persist_directory=None):
         if cls._instance is None:
             cls._instance = super(KnowledgeBase, cls).__new__(cls)
-            cls._instance._init_db(persist_directory)
+            db_dir = persist_directory or str(config.get_vector_db_dir())
+            cls._instance._init_db(db_dir)
         return cls._instance
 
     def _init_db(self, persist_directory):

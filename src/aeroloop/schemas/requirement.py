@@ -6,6 +6,7 @@ from .common import Assumption, MissingField
 from .mission import MissionProfile
 from .regulation import RegulationEvidence
 from .traceability import TraceLink
+from .aircraft import ConceptBaseline
 
 class CandidateRequirement(BaseModel):
     candidate_id: str
@@ -206,9 +207,27 @@ class RequirementAnalysisResult(BaseModel):
     trace_links: list[TraceLink]
     quality_report: RequirementQualityReport
 
+class RequirementReasoningInput(BaseModel):
+    run_id: str
+    mission_profile: MissionProfile
+    candidate_requirements: list[CandidateRequirement] = []
+    unresolved_questions: list[str] = []
+
+class ResolvedAssumption(BaseModel):
+    question: str
+    assumed_value: str
+    rationale: str
+    confidence: float
+
 class RequirementReasoningResult(BaseModel):
+    run_id: str
+    status: Literal["success", "needs_hitl", "failed"]
+    
+    concept_baseline: Optional[ConceptBaseline] = None
+    
     final_requirements: list[FinalRequirement]
-    conflicts: list[RequirementConflict]
-    assumptions: list[Assumption]
+    resolved_assumptions: list[ResolvedAssumption]
+    remaining_unresolved_questions: list[str]
+    conflicts_detected: list[RequirementConflict]
     trace_links: list[TraceLink]
     quality_report: RequirementQualityReport

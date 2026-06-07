@@ -99,44 +99,186 @@ Output saved to: .agents/mission_parsing_result_mission_20260514_170737.json
 
 ---
 
-## 에이전트 파이프라인 (Bidirectional LangGraph)
+## AeroLoop 에이전트 워크플로우 (3-Layer Architecture)
 
-AeroLoop는 단순 선형적인 파이프라인이 아닌 **양방향 상태 기반 그래프(StateGraph)** 구조를 채택하고 있습니다. 
-`Orchestrator Agent`가 중앙 라우터(Hub) 역할을 수행하여, 각 에이전트의 실행 결과를 평가하고 다음 실행할 노드(Agent)를 결정합니다. 
-특히 **`unresolved_questions`(미해결 이슈)**나 **`needs_configuration_detail`(상세 형상 필요)** 상태가 감지되면, 이를 무시하거나 에러로 처리하지 않고 다음 에이전트인 `Config Design Agent`로 전달하여 초기 가정(Baseline)을 수립하거나 HITL(Human-in-the-loop) 피드백을 받도록 영리하게 분기(Routing)합니다.
+AeroLoop는 자연어 임무 입력을 받아 요구도 분석, 인증 규정 검토, 개념 설계, 형상 생성, 해석, 시뮬레이션, Runtime Verification, 리포트 생성을 수행하는 멀티 에이전트 기반 항공기 개념 설계 자동화 파이프라인입니다.
 
-### Workflow (Agents)
-  - MissionParsingAgent
-  - RequirementReasoningAgent
-  - AircraftCandidateGenerator
-  - CertificationRequirementAgent / CCL Agent
-  - SizingAgent
-  - GeometryDesignAgent
-  - SimulationAgent
-  - PathPlanningAgent
-  - RuntimeVerificationAgent
-  - CertificationComplianceAgent
-  - ReportGenerationAgent
+전체 워크플로우는 단순한 선형 파이프라인이 아니라, `OrchestratorAgent`가 각 에이전트의 결과를 평가하고 필요한 경우 이전 단계로 되돌리는 **양방향 StateGraph 구조**로 설계됩니다.
+
+```mermaid
+graph TD
+    User["User Mission Input<br/>자연어 임무 입력"] --> Orch["OrchestratorAgent<br/>중앙 라우터 / 상태 관리자"]
+
+    subgraph L1["Layer 1. Requirement Intelligence Layer"]
+        MPA["MissionParsingAgent<br/>임무 파싱"]
+        CRA["CustomerRequirementAgent<br/>고객 요구도 추출"]
+        CCA["CertificationComplianceAgent<br/>인증 규정 / CCL / MoC 검토"]
+        RRA["RequirementReasoningAgent<br/>요구도 충돌 조정 / 최종 확정"]
+        CVA["CertificationValidatorAgent<br/>설계안 규정 위반 검사"]
+    end
+
+    subgraph L2["Layer 2. Conceptual Design Layer"]
+        SA["SizingAgent<br/>질량 / 동력 / 에너지 사이징"]
+        GDA["GeometryDesignAgent<br/>OpenVSP 형상 생성"]
+    end
+
+    subgraph L3["Layer 3. Verification & Compliance Layer"]
+        AAA["AerodynamicsAnalysisAgent<br/>공력 / 질량 특성 분석"]
+        SIM["SimulationAgent / PathPlanningAgent<br/>비행 경로 및 시뮬레이션"]
+        RVA["RuntimeVerificationAgent<br/>Runtime 요구도 검증"]
+        RGA["ReportGenerationAgent<br/>최종 설계 / 검증 리포트 생성"]
+    end
+
+    Orch --> MPA
+    MPA --> Orch
+
+    Orch --> CRA
+    CRA --> Orch
+
+    Orch --> CCA
+    CCA --> Orch
+
+    Orch --> RRA
+    RRA --> Orch
+
+    Orch --> CVA
+    CVA --> Orch
+
+    Orch --> SA
+    SA --> Orch
+
+    Orch --> GDA
+    GDA --> Orch
+
+    Orch --> AAA
+    AAA --> Orch
+
+    Orch --> SIM
+    SIM --> Orch
+
+    Orch --> RVA
+    RVA --> Orch
+
+    Orch --> RGA
+    RGA --> End["Final Output<br/>설계안 / 검증 결과 / 리포트"]
+```
+
+### Detailed Bidirectional Workflow
+
+```mermaid
+graph TD
+    Start["START<br/>Natural Language Mission"] --> Orch["OrchestratorAgent"]
+
+    Orch -->|"1. Parse Mission"| MPA["MissionParsingAgent"]
+    MPA -->|"MissionProfile<br/>Explicit Constraints<br/>Missing Fields<br/>Runtime Monitoring Candidates"| Orch
+
+    Orch -->|"2. Extract Customer Requirements"| CRA["CustomerRequirementAgent"]
+    CRA -->|"Candidate Requirements<br/>Unresolved Questions<br/>Customer Constraints"| Orch
+
+    Orch -->|"3. Review Certification Basis"| CCA["CertificationComplianceAgent"]
+    CCA -->|"Certification Basis<br/>Applicable Rules<br/>CCL Draft<br/>MoC Draft"| Orch
+
+    Orch -->|"4. Resolve & Baseline Requirements"| RRA["RequirementReasoningAgent"]
+    RRA -->|"FinalRequirementSet<br/>ConceptBaseline (SizingDraft)<br/>Assumptions<br/>Resolved Conflicts"| Orch
+
+    Orch -->|"5. Validate Baseline"| CVA["CertificationValidatorAgent"]
+    CVA -->|"ValidationResult<br/>is_valid<br/>Violations / Warnings"| Orch
+
+    Orch -->|"6. Size Aircraft"| SA["SizingAgent"]
+    SA -->|"SizingResult<br/>MTOW<br/>Payload<br/>Power<br/>Battery<br/>Rotor / Wing Estimates"| Orch
+
+    Orch -->|"7. Generate Geometry"| GDA["GeometryDesignAgent"]
+    GDA -->|"OpenVSP Parameters<br/>VSP3 File<br/>STL / Mesh Output"| Orch
+
+    Orch -->|"8. Analyze Aerodynamics"| AAA["AerodynamicsAnalysisAgent"]
+    AAA -->|"Aero Coefficients<br/>Mass Properties<br/>Performance Feasibility"| Orch
+
+    Orch -->|"9. Simulate Mission"| SIM["SimulationAgent / PathPlanningAgent"]
+    SIM -->|"Trajectory<br/>Energy Usage<br/>Obstacle Clearance<br/>Mission Feasibility"| Orch
+
+    Orch -->|"10. Runtime Verification"| RVA["RuntimeVerificationAgent"]
+    RVA -->|"Requirement Pass / Fail<br/>Violation Logs<br/>Runtime Evidence"| Orch
+
+    Orch -->|"11. Generate Report"| RGA["ReportGenerationAgent"]
+    RGA --> End["END<br/>Concept Design Report"]
+
+    CRA -.->|"missing or ambiguous requirement"| RRA
+    CVA -.->|"concept baseline violates certification rules"| RRA
+    CCA -.->|"needs geometry / sizing evidence"| SA
+    SA -.->|"infeasible sizing"| RRA
+    AAA -.->|"aerodynamic failure"| SA
+    SIM -.->|"mission violation"| RRA
+    RVA -.->|"requirement violation"| Orch
+    Orch -.->|"relax mission constraint if repeated failure"| MPA
+```
+
+### Agent Responsibility Flow
+
+```mermaid
+flowchart LR
+    A["MissionParsingAgent<br/>What does the user want?"] --> B["CustomerRequirementAgent<br/>What should the aircraft satisfy?"]
+    B --> C["CertificationComplianceAgent<br/>Which rules, CCL, and MoC apply?"]
+    C --> D["RequirementReasoningAgent<br/>Which requirements are final, and what is the SizingDraft?"]
+    D --> CC["CertificationValidatorAgent<br/>Does the SizingDraft violate the rules?"]
+    CC --> E["SizingAgent<br/>What size, mass, power, and battery are needed?"]
+    E --> F["GeometryDesignAgent<br/>What aircraft shape should be generated?"]
+    F --> G["AerodynamicsAnalysisAgent<br/>Is the shape physically reasonable?"]
+    G --> H["SimulationAgent / PathPlanningAgent<br/>Can it fly the mission?"]
+    H --> I["RuntimeVerificationAgent<br/>Were the requirements actually satisfied?"]
+    I --> J["ReportGenerationAgent<br/>Summarize design, evidence, and failures"]
+```
+
+### Data Artifact Flow
+
+```mermaid
+graph TD
+    Input["Natural Language Mission"] --> MP["MissionProfile"]
+
+    MP --> CR["CandidateRequirementSet"]
+    CR --> CB["Certification Basis<br/>Applicable Rules"]
+    CB --> CCL["Compliance Checklist<br/>CCL"]
+    CCL --> MOC["Means of Compliance<br/>MoC Plan"]
+
+    CR --> FR["FinalRequirementSet"]
+    CB --> FR
+    MOC --> FR
+
+    FR --> C_BASE["ConceptBaseline (SizingDraft)"]
+    C_BASE --> CB_VAL["CertificationValidatorAgent"]
+    CB_VAL --> SR["SizingResult"]
+    SR --> GP["GeometryParameterSet"]
+    GP --> VSP["OpenVSP Model<br/>.vsp3 / .stl"]
+
+    VSP --> AR["AerodynamicsAnalysisResult"]
+    AR --> SP["SimulationParameterSet"]
+    SP --> TR["Trajectory / Simulation Result"]
+
+    FR --> RV["Runtime Requirement Verification"]
+    TR --> RV
+
+    RV --> REP["Final AeroLoop Report"]
+    MOC --> REP
+    AR --> REP
+    SR --> REP
+```
+
+### 핵심 실행 흐름 요약
 
 ```text
-자연어 임무 입력
-       ↓
-    [START]
-       ↓
-+-------------------+
-| Orchestrator (Hub)| <----+
-+-------------------+      | (상태 평가 및 라우팅 / 건너뛰기, 되돌아가기 지원)
-  |   |   |   |   |        |
-  v   v   v   v   v        |
- [Mission Parsing] --------+
- [Customer Req]    --------+
- [Certification]   --------+
- [Sizing]          --------+ (미해결 이슈 및 기체 스펙 초기안 수립 / HITL)
- [Geometry Design] --------+ (3D 형상 파라미터 컴파일 및 메쉬 생성)
- [Simulation]      --------+
-       ↓
-     [END]
+1. 사용자가 자연어로 임무를 입력한다.
+2. MissionParsingAgent가 임무를 구조화된 MissionProfile로 변환한다.
+3. CustomerRequirementAgent가 고객 / 운용 관점의 요구도를 추출한다.
+4. CertificationComplianceAgent가 SC-VTOL, Small Helicopter, Small Aircraft 등 관련 규정을 검토하고 CCL/MoC 초안을 만든다.
+5. RequirementReasoningAgent가 고객 요구도, 인증 요구도, 누락 정보, 충돌 조건을 종합하여 FinalRequirementSet 및 ConceptBaseline(SizingDraft)을 생성한다.
+6. CertificationValidatorAgent가 생성된 ConceptBaseline이 인증 규정을 위반하는지 확정론적으로 검증한다.
+7. SizingAgent가 검증된 ConceptBaseline을 기반으로 MTOW, payload, battery, power, rotor/wing sizing을 계산한다.
+7. GeometryDesignAgent가 SizingResult를 OpenVSP 파라미터로 변환하고 항공기 형상을 생성한다.
+8. AerodynamicsAnalysisAgent가 생성된 형상의 공력 및 질량 특성을 분석한다.
+9. SimulationAgent / PathPlanningAgent가 실제 임무 수행 가능성을 검증한다.
+10. RuntimeVerificationAgent가 시뮬레이션 중 요구도 위반 여부를 검사한다.
+11. ReportGenerationAgent가 설계 결과, 인증 근거, 검증 결과, 실패 조건을 최종 리포트로 정리한다.
 ```
+
 
 ### Workflow 실행
 

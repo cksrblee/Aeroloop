@@ -4,7 +4,7 @@ from aeroloop.schemas.mission import MissionProfile, MissionParsingInput
 from aeroloop.schemas.requirement import CandidateRequirement, FinalRequirement, RequirementConflict
 from aeroloop.schemas.common import Assumption, ErrorInfo
 from aeroloop.schemas.regulation import RegulationEvidence
-from aeroloop.schemas.compliance import CertificationComplianceResult
+from aeroloop.schemas.compliance import CertificationComplianceResult, CertificationValidationResult
 from aeroloop.schemas.aircraft import AircraftConcept
 from aeroloop.schemas.engineering import SizingAgentResult
 from aeroloop.schemas.geometry import GeometryDesignResult
@@ -29,6 +29,7 @@ class WorkflowState(TypedDict):
     mission_profile: MissionProfile | None
     aircraft_concept: AircraftConcept | None
     certification_compliance_result: CertificationComplianceResult | None
+    certification_validation_result: CertificationValidationResult | None
     sizing_result: SizingAgentResult | None
     geometry_design_result: GeometryDesignResult | None
     analysis_result: AerodynamicsAnalysisResult | None

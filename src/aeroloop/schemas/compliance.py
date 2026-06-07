@@ -1,7 +1,7 @@
 from typing import Literal, Optional, List
 from pydantic import BaseModel
 
-from .aircraft import AircraftConcept
+from .aircraft import AircraftConcept, ConceptBaseline
 from .certification import CertificationSourcePolicy, CertificationClause
 from .moc import MeansOfCompliancePlan
 from .traceability import CertificationRequirementLink, CertificationConflict
@@ -149,3 +149,16 @@ class CertificationComplianceResult(BaseModel):
     assumptions: List[str]
 
     quality_report: CertificationComplianceQualityReport
+
+class CertificationValidationInput(BaseModel):
+    run_id: str
+    concept_baseline: ConceptBaseline
+    compliance_result: CertificationComplianceResult
+
+class CertificationValidationResult(BaseModel):
+    validation_id: str
+    run_id: str
+    is_valid: bool
+    violations: List[str] = []
+    warnings: List[str] = []
+    status: Literal["success", "failed"]

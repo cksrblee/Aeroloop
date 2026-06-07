@@ -43,6 +43,14 @@ class OrchestratorAgent:
                     "sizing_iteration_count": 0 # Reset local count
                 }
             
+            # Validation failures -> back to requirement reasoning
+            if "validation" in last_feedback and "certification" in last_feedback:
+                return {
+                    "next_node": "requirement_reasoning",
+                    "status": "running",
+                    "feedback_history": [f"Validation failed. Routing back to RRA to fix baseline."]
+                }
+            
             # Sizing failures or Simulation failures
             if "sizing" in last_feedback or "geometry" in last_feedback or "simulation" in last_feedback or "aerodynamics" in last_feedback:
                 if sizing_iters < self.max_sizing_iters:
@@ -75,19 +83,30 @@ class OrchestratorAgent:
         if not candidate_reqs:
             return {"next_node": "customer_requirement", "status": "running"}
             
-        unresolved_questions = state.get("unresolved_questions", [])
-        if unresolved_questions:
-            return {"next_node": "sizing", "status": "running", "feedback_history": ["Unresolved questions detected. Routing to Sizing agent."]}
-            
+        # Extraction: Retrieve applicable regulations
         if not cert_result:
             return {"next_node": "certification_compliance", "status": "running"}
             
-        # 4. Certification Quality Routing
+        requirement_reasoning_result = state.get("requirement_reasoning_result")
+        unresolved_questions = state.get("unresolved_questions", [])
+        
+        if not requirement_reasoning_result or unresolved_questions:
+            return {"next_node": "requirement_reasoning", "status": "running", "feedback_history": ["Routing to Reasoning agent to merge requirements and make assumptions."]}
+            
+        # Validation: Verify ConceptBaseline against regulations
+        validation_result = state.get("certification_validation_result")
+        # If there's no validation result OR if the last validation failed, we need to run it (or we ran it and failed, but wait, if it failed it would be caught by the error handler above and routed to RRA. When RRA finishes, status is 'running'. But validation_result is still in state and is_valid is False!)
+        # So we should check if validation_result is valid. If not, route to CVA to check the NEW baseline.
+        if not validation_result or not validation_result.is_valid:
+            return {"next_node": "certification_validator", "status": "running", "feedback_history": ["Validating the reasoned Concept Baseline against the rules."]}
+            
+        # 4. Certification Quality Routing (Post-Reasoning)
         quality_report = cert_result.quality_report
-        if quality_report.readiness_level == "needs_configuration_detail":
-            return {"next_node": "sizing", "status": "running", "feedback_history": ["Please provide detailed AircraftConcept for further certification mapping."]}
         if quality_report.readiness_level == "needs_human_certification_review":
             return {"next_node": "END", "status": "paused_for_review", "feedback_history": ["Human certification expert review required."]}
+        
+        # Note: If quality_report.readiness_level == "needs_configuration_detail", 
+        # it is expected. We proceed to Sizing to generate the configuration detail.
             
         # 5. Cyclic Engineering Flow: Sizing -> Geometry -> Simulation
         sizing_result = state.get("sizing_result")

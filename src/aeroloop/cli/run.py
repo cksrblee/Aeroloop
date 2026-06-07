@@ -11,6 +11,7 @@ from aeroloop.agents.customer_requirement_agent import CustomerRequirementAgent
 from aeroloop.agents.certification_compliance_agent import CertificationComplianceAgent
 from aeroloop.schemas.compliance import CertificationComplianceInput
 from aeroloop.schemas.certification import CertificationSourcePolicy
+from aeroloop.config import config
 
 # Path to the demo requirements file (relative to working directory)
 DEMO_FILE = Path("demo_requirements.md")
@@ -21,7 +22,7 @@ def init_adapter():
     return OpenAIAdapter(model_name="gpt-5.4-mini", temperature=0.0)
 
 def ensure_agents_dir():
-    """Ensure the .agents/ output directory exists."""
+    """Ensure the legacy .agents/ output directory exists (used for fallbacks)."""
     agents_dir = Path(".agents")
     agents_dir.mkdir(exist_ok=True)
     return agents_dir
@@ -62,8 +63,8 @@ def run_mission_agent(args):
     try:
         result = agent.parse(mission_input)
 
-        agents_dir = ensure_agents_dir()
-        output_file = agents_dir / f"mission_parsing_result_{mission_input.mission_id}.json"
+        run_dir = config.get_run_dir(mission_input.mission_id)
+        output_file = run_dir / f"mission_parsing_result.json"
 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(result.model_dump_json(indent=2))
@@ -122,8 +123,8 @@ def run_customer_agent(args):
     try:
         result = agent.analyze(mission_profile, mission_id=mission_id_str)
         
-        agents_dir = ensure_agents_dir()
-        output_file = agents_dir / f"customer_requirements_result_{result.mission_id}.json"
+        run_dir = config.get_run_dir(result.mission_id)
+        output_file = run_dir / f"customer_requirements_result.json"
         
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(result.model_dump_json(indent=2))
@@ -166,7 +167,10 @@ def run_certification_agent(args):
         req_result = CustomerRequirementResult(**data)
         
         # Attempt to load corresponding MissionProfile
-        mission_file = input_file.parent / f"mission_parsing_result_{req_result.mission_id}.json"
+        mission_file = input_file.parent / f"mission_parsing_result.json"
+        if not mission_file.exists():
+            mission_file = input_file.parent / f"mission_parsing_result_{req_result.mission_id}.json"
+            
         if mission_file.exists():
             with open(mission_file, "r", encoding="utf-8") as mf:
                 m_data = json.load(mf)
@@ -206,8 +210,8 @@ def run_certification_agent(args):
     try:
         result = agent.analyze(comp_input)
         
-        agents_dir = ensure_agents_dir()
-        output_file = agents_dir / f"certification_compliance_result_{result.mission_id}.json"
+        run_dir = config.get_run_dir(result.mission_id)
+        output_file = run_dir / f"certification_compliance_result.json"
         
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(result.model_dump_json(indent=2))
@@ -223,6 +227,237 @@ def run_certification_agent(args):
             
     except Exception as e:
         print(f"\n[ERROR] CertificationComplianceAgent failed: {e}")
+        raise
+
+def run_reasoning_agent(args):
+    """Run the RequirementReasoningAgent on a previously parsed CustomerRequirementResult."""
+    print("Initializing RequirementReasoningAgent...")
+    print("Initializing OpenAI Adapter...")
+    adapter = init_adapter()
+    from aeroloop.agents.requirement_reasoning_agent import RequirementReasoningAgent
+    agent = RequirementReasoningAgent(llm_model=adapter)
+    
+    input_file = Path(args.input_file)
+    if not input_file.exists():
+        print(f"\n[ERROR] File not found: {input_file.absolute()}")
+        return
+
+    print(f"Loading customer requirements from: {input_file.absolute()}")
+    try:
+        from aeroloop.schemas.requirement import CustomerRequirementResult, RequirementReasoningInput
+        from aeroloop.schemas.mission import MissionProfile
+        
+        with open(input_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        req_result = CustomerRequirementResult(**data)
+        
+        # Attempt to load corresponding MissionProfile
+        mission_file = input_file.parent / f"mission_parsing_result.json"
+        if not mission_file.exists():
+            mission_file = input_file.parent / f"mission_parsing_result_{req_result.mission_id}.json"
+            
+        if mission_file.exists():
+            with open(mission_file, "r", encoding="utf-8") as mf:
+                m_data = json.load(mf)
+                mission_profile = MissionProfile(**m_data.get("mission_profile", {}))
+        else:
+            mission_profile = MissionProfile(mission_id=req_result.mission_id)
+            
+        reasoning_input = RequirementReasoningInput(
+            run_id=req_result.mission_id,
+            mission_profile=mission_profile,
+            candidate_requirements=req_result.candidate_requirements,
+            unresolved_questions=req_result.unresolved_questions
+        )
+    except Exception as e:
+        print(f"\n[ERROR] Failed to load inputs from {input_file.name}: {e}")
+        return
+
+    print("\n--- Running RequirementReasoningAgent ---")
+    try:
+        result = agent.refine(reasoning_input)
+        
+        run_dir = config.get_run_dir(result.run_id)
+        output_file = run_dir / f"requirement_reasoning_result.json"
+        
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(result.model_dump_json(indent=2))
+
+        # Also generate the human-readable markdown report (Blueprint)
+        report_md = agent.export_markdown_report(reasoning_input, result)
+        report_file = run_dir / f"System_Requirements_Report.md"
+        with open(report_file, "w", encoding="utf-8") as f:
+            f.write(report_md)
+
+        print(f"\n[SUCCESS] Requirement Reasoning completed. Status: {result.status}")
+        print(f"JSON Data saved to: {output_file.absolute()}")
+        print(f"Markdown Report saved to: {report_file.absolute()}")
+
+        print("\n--- Summary ---")
+        print(f"Run ID                     : {result.run_id}")
+        print(f"Status                     : {result.status}")
+        print(f"Final Requirements         : {len(result.final_requirements)}")
+        print(f"Resolved Assumptions       : {len(result.resolved_assumptions)}")
+        print(f"Remaining Questions (HITL) : {len(result.remaining_unresolved_questions)}")
+        for a in result.resolved_assumptions:
+            print(f"  - [Assumed {a.assumed_value}] Q: {a.question}")
+            
+    except Exception as e:
+        print(f"\n[ERROR] RequirementReasoningAgent failed: {e}")
+        raise
+
+def run_sizing_agent(args):
+    """Run the SizingAgent on a previously generated RequirementReasoningResult."""
+    print("Initializing SizingAgent...")
+    from aeroloop.agents.sizing_agent import SizingAgent
+    from aeroloop.schemas.requirement import RequirementReasoningResult
+    from aeroloop.schemas.engineering import SizingRequest, SizingConfig
+    from aeroloop.schemas.aircraft import AircraftCandidate
+    from aeroloop.schemas.mission import MissionProfile
+    
+    agent = SizingAgent()
+    
+    input_file = Path(args.input_file)
+    if not input_file.exists():
+        print(f"\n[ERROR] File not found: {input_file.absolute()}")
+        return
+
+    print(f"Loading reasoning results from: {input_file.absolute()}")
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        req_result = RequirementReasoningResult(**data)
+        
+        # Load mission profile
+        mission_file = input_file.parent / f"mission_parsing_result.json"
+        if not mission_file.exists():
+            mission_file = input_file.parent / f"mission_parsing_result_{req_result.run_id}.json"
+            
+        if mission_file.exists():
+            with open(mission_file, "r", encoding="utf-8") as mf:
+                m_data = json.load(mf)
+                mission_profile = MissionProfile(**m_data.get("mission_profile", {}))
+        else:
+            mission_profile = MissionProfile()
+            
+        candidate_id = f"AC-{req_result.run_id[-6:]}"
+        candidate = AircraftCandidate(
+            candidate_id=candidate_id,
+            aircraft_type="lift_cruise_vtol",
+            passenger_capacity=mission_profile.passenger_count if hasattr(mission_profile, 'passenger_count') and mission_profile.passenger_count else 4
+        )
+        
+        sizing_req = SizingRequest(
+            sizing_request_id=f"REQ-SIZ-{req_result.run_id[-6:]}",
+            run_id=req_result.run_id,
+            mission_id=req_result.run_id,
+            candidate_id=candidate_id,
+            mission_profile=mission_profile,
+            aircraft_candidate=candidate,
+            sizing_config=SizingConfig(),
+            final_requirements=req_result.final_requirements
+        )
+    except Exception as e:
+        print(f"\n[ERROR] Failed to load inputs from {input_file.name}: {e}")
+        return
+
+    print("\n--- Running SizingAgent ---")
+    try:
+        result = agent.size(sizing_req)
+        
+        run_dir = config.get_run_dir(result.run_id)
+        output_file = run_dir / f"sizing_result.json"
+        
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(result.model_dump_json(indent=2))
+
+        print(f"\n[SUCCESS] Sizing completed. Status: {result.status}")
+        print(f"JSON Data saved to: {output_file.absolute()}")
+
+        print("\n--- Summary ---")
+        if result.sizing_result:
+            print(f"MTOW (kg)                  : {result.sizing_result.mtow_kg:.1f}")
+        if result.geometry_parameter_set:
+            print(f"Wing Area (m2)             : {result.geometry_parameter_set.wing_area_m2}")
+            print(f"Total Disk Area (m2)       : {result.geometry_parameter_set.total_disk_area_m2}")
+            
+    except Exception as e:
+        print(f"\n[ERROR] SizingAgent failed: {e}")
+        raise
+
+def run_validator_agent(args):
+    """Run the CertificationValidatorAgent on a reasoning result and compliance result."""
+    print("Initializing CertificationValidatorAgent...")
+    from aeroloop.agents.certification_validator_agent import CertificationValidatorAgent
+    from aeroloop.schemas.compliance import CertificationValidationInput, CertificationComplianceResult
+    from aeroloop.schemas.requirement import RequirementReasoningResult
+    
+    agent = CertificationValidatorAgent()
+    
+    input_file = Path(args.input_file)
+    if not input_file.exists():
+        print(f"\n[ERROR] File not found: {input_file.absolute()}")
+        return
+
+    print(f"Loading reasoning results from: {input_file.absolute()}")
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        req_result = RequirementReasoningResult(**data)
+        
+        # Load compliance result
+        comp_file = input_file.parent / f"certification_compliance_result.json"
+        if not comp_file.exists():
+            comp_file = input_file.parent / f"certification_compliance_result_{req_result.run_id}.json"
+            
+        if not comp_file.exists():
+            print(f"\n[ERROR] Certification compliance result not found: {comp_file.absolute()}")
+            return
+            
+        with open(comp_file, "r", encoding="utf-8") as cf:
+            c_data = json.load(cf)
+            comp_result = CertificationComplianceResult(**c_data)
+            
+        if not req_result.concept_baseline:
+            print("\n[ERROR] ConceptBaseline is missing from RequirementReasoningResult.")
+            return
+            
+        val_input = CertificationValidationInput(
+            run_id=req_result.run_id,
+            concept_baseline=req_result.concept_baseline,
+            compliance_result=comp_result
+        )
+    except Exception as e:
+        print(f"\n[ERROR] Failed to load inputs: {e}")
+        return
+
+    print("\n--- Running CertificationValidatorAgent ---")
+    try:
+        result = agent.validate(val_input)
+        
+        run_dir = config.get_run_dir(result.run_id)
+        output_file = run_dir / f"certification_validation_result.json"
+        
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(result.model_dump_json(indent=2))
+
+        print(f"\n[SUCCESS] Validation completed. Status: {result.status}")
+        print(f"JSON Data saved to: {output_file.absolute()}")
+
+        print("\n--- Summary ---")
+        print(f"Is Valid                   : {result.is_valid}")
+        print(f"Violations                 : {len(result.violations)}")
+        for v in result.violations:
+            print(f"  - [VIOLATION] {v}")
+        print(f"Warnings                   : {len(result.warnings)}")
+        for w in result.warnings:
+            print(f"  - [WARNING] {w}")
+            
+    except Exception as e:
+        print(f"\n[ERROR] CertificationValidatorAgent failed: {e}")
         raise
 
 def run_workflow(args):
@@ -248,9 +483,10 @@ def run_workflow(args):
     
     print("\n--- Starting Bidirectional Workflow ---")
     try:
-        # We use recursion_limit to prevent infinite loops during bidirectional routing
-        config = {"recursion_limit": 20}
-        for s in app.stream(initial_state, config=config):
+        # We use max_workflow_iterations from config to prevent infinite loops during bidirectional routing
+        from aeroloop.config import config
+        graph_config = {"recursion_limit": config.max_workflow_iterations}
+        for s in app.stream(initial_state, config=graph_config):
             node_name = list(s.keys())[0]
             print(f"\n[Node Execution: {node_name}]")
             state_update = s[node_name]
@@ -293,7 +529,7 @@ def main():
     customer_parser.add_argument(
         "input_file",
         type=str,
-        help="Path to the JSON file containing the parsed MissionProfile (e.g. .agents/mission_parsing_result_xxx.json)"
+        help="Path to the JSON file containing the parsed MissionProfile (e.g. results/default_user/RUN-XXX/mission_parsing_result.json)"
     )
 
     # CertificationComplianceAgent subparser
@@ -301,7 +537,31 @@ def main():
     certification_parser.add_argument(
         "input_file",
         type=str,
-        help="Path to the JSON file containing the CustomerRequirementResult (e.g. .agents/customer_requirements_result_xxx.json)"
+        help="Path to the JSON file containing the CustomerRequirementResult (e.g. results/default_user/RUN-XXX/customer_requirements_result.json)"
+    )
+
+    # RequirementReasoningAgent subparser
+    reasoning_parser = subparsers.add_parser("reasoning", help="Run the RequirementReasoningAgent")
+    reasoning_parser.add_argument(
+        "input_file",
+        type=str,
+        help="Path to the JSON file containing the CustomerRequirementResult (e.g. results/default_user/RUN-XXX/customer_requirements_result.json)"
+    )
+
+    # SizingAgent subparser
+    sizing_parser = subparsers.add_parser("sizing", help="Run the SizingAgent")
+    sizing_parser.add_argument(
+        "input_file",
+        type=str,
+        help="Path to the JSON file containing the RequirementReasoningResult (e.g. results/default_user/RUN-XXX/requirement_reasoning_result.json)"
+    )
+
+    # ValidatorAgent subparser
+    validator_parser = subparsers.add_parser("validator", help="Run the CertificationValidatorAgent")
+    validator_parser.add_argument(
+        "input_file",
+        type=str,
+        help="Path to the JSON file containing the RequirementReasoningResult (e.g. results/default_user/RUN-XXX/requirement_reasoning_result.json)"
     )
 
     # Workflow subparser
@@ -320,6 +580,12 @@ def main():
         run_customer_agent(args)
     elif args.agent == "certification":
         run_certification_agent(args)
+    elif args.agent == "reasoning":
+        run_reasoning_agent(args)
+    elif args.agent == "sizing":
+        run_sizing_agent(args)
+    elif args.agent == "validator":
+        run_validator_agent(args)
     elif args.agent == "workflow":
         run_workflow(args)
     else:

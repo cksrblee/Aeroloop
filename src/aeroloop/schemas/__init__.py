@@ -28,7 +28,7 @@ from .environment import EnvironmentProxyMap
 from .planning import FlightPath
 from .simulation import SimulationRunLog
 from .verification import ViolationEvent
-from .traceability import TraceabilityMatrix
+from .traceability import TraceabilityRegistry
 
 __all__ = [
     # Mission
@@ -90,5 +90,5 @@ __all__ = [
     "FlightPath",
     "SimulationRunLog",
     "ViolationEvent",
-    "TraceabilityMatrix",
+    "TraceabilityRegistry",
 ]
