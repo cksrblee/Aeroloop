@@ -56,6 +56,14 @@ class ConceptBaseline(AircraftConcept):
     battery_reserve_percent_target: Optional[float] = None
     noise_level_target_db: Optional[float] = None
     
+    # Geometric targets for OpenVSP schema initialization
+    target_rotor_count: Optional[int] = None
+    target_rotor_diameter_m: Optional[float] = None
+    max_wingspan_m: Optional[float] = None
+    max_length_m: Optional[float] = None
+    fuselage_width_m_target: Optional[float] = None
+    fuselage_height_m_target: Optional[float] = None
+    
     assumptions: list[str] = []
 
 class AircraftTemplate(BaseModel):

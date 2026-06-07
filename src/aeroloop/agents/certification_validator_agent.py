@@ -37,6 +37,23 @@ class CertificationValidatorAgent(BaseAIAgent):
             if "noise" in item.topic_area.lower() and baseline.noise_level_target_db is not None:
                 if baseline.noise_level_target_db > 75.0:
                     warnings.append(f"Noise level target ({baseline.noise_level_target_db} dB) may exceed strict urban operation rules.")
+                    
+        # Ensure LLM-generated ConceptBaseline contains all required OpenVSP geometric constraints
+        required_openvsp_fields = {
+            "max_wingspan_m": "Max wingspan",
+            "max_length_m": "Max fuselage length",
+            "fuselage_width_m_target": "Fuselage width target",
+            "fuselage_height_m_target": "Fuselage height target"
+        }
+        
+        for field_name, friendly_name in required_openvsp_fields.items():
+            if getattr(baseline, field_name, None) is None:
+                violations.append(f"{friendly_name} ({field_name}) is missing from the concept baseline. This is required for OpenVSP generation.")
+                
+        # Rotor count is only required for rotor-bearing aircraft
+        if baseline.aircraft_type in ["lift_cruise_vtol", "small_helicopter", "multirotor", "tiltrotor"]:
+            if getattr(baseline, "target_rotor_count", None) is None:
+                violations.append(f"Target rotor count (target_rotor_count) is missing from the concept baseline. Required for OpenVSP generation for {baseline.aircraft_type}.")
         
         is_valid = len(violations) == 0
         

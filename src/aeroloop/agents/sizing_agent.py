@@ -11,7 +11,7 @@ from aeroloop.schemas.engineering import (
     TraceLink, ComplianceArtifactLink
 )
 from aeroloop.schemas.mission import MissionProfile
-from aeroloop.schemas.aircraft import AircraftCandidate
+from aeroloop.schemas.aircraft import ConceptBaseline
 
 class SizingAgent(BaseAIAgent):
     """
@@ -73,8 +73,8 @@ class SizingAgent(BaseAIAgent):
             )
         }
 
-    def _get_template(self, candidate: AircraftCandidate, config: SizingConfig, warnings: List[str]) -> SizingTemplate:
-        ac_type = candidate.aircraft_type
+    def _get_template(self, baseline: ConceptBaseline, config: SizingConfig, warnings: List[str]) -> SizingTemplate:
+        ac_type = baseline.aircraft_type
         if ac_type in self.templates:
             return self.templates[ac_type]
         elif config.allow_template_fallback:
@@ -88,15 +88,15 @@ class SizingAgent(BaseAIAgent):
         hash_str = hashlib.md5(f"{base_id}-{salt}".encode()).hexdigest()[:8]
         return f"{prefix}-{hash_str}"
 
-    def _compute_payload(self, mission: MissionProfile, candidate: AircraftCandidate, config: SizingConfig, assumptions: List[str]) -> float:
+    def _compute_payload(self, mission: MissionProfile, baseline: ConceptBaseline, config: SizingConfig, assumptions: List[str]) -> float:
         passenger_count = getattr(mission, 'passenger_count', None)
         if passenger_count is None:
-            passenger_count = getattr(candidate, 'passenger_capacity', None)
+            passenger_count = getattr(baseline, 'passenger_count', None)
             if passenger_count is None:
                 passenger_count = 1
-                assumptions.append("Passenger count missing from mission and candidate. Defaulting to 1.")
+                assumptions.append("Passenger count missing from mission and baseline. Defaulting to 1.")
             else:
-                assumptions.append(f"Passenger count missing from mission. Falling back to candidate capacity ({passenger_count}).")
+                assumptions.append(f"Passenger count missing from mission. Falling back to baseline capacity ({passenger_count}).")
                 
         passenger_weight = passenger_count * config.passenger_mass_kg
         baggage_weight = passenger_count * config.baggage_mass_per_passenger_kg
@@ -110,6 +110,28 @@ class SizingAgent(BaseAIAgent):
         warnings.append("Mission distance was missing. Default minimum mission distance 1.0km was used for preliminary sizing.")
         return 1.0
 
+    def _validate_inputs_for_openvsp_schema(self, request: SizingRequest, template: SizingTemplate) -> List[str]:
+        """
+        Validates that the input provides enough information to satisfy the OpenVSP geometry schema.
+        """
+        errors = []
+        
+        # Check if template has necessary loading params to produce openvsp required geometry
+        if template.aircraft_type in ["lift_cruise_vtol", "small_aircraft"]:
+            if not template.wing_loading_kg_per_m2:
+                errors.append(f"Template {template.template_id} missing wing_loading_kg_per_m2 required for OpenVSP wing geometry.")
+                
+        if template.aircraft_type in ["lift_cruise_vtol", "small_helicopter", "multirotor"]:
+            if not template.disk_loading_kg_per_m2:
+                errors.append(f"Template {template.template_id} missing disk_loading_kg_per_m2 required for OpenVSP rotor geometry.")
+                
+        # Validate passenger count as it strongly influences fuselage sizing and overall scale
+        passenger_count = getattr(request.mission_profile, 'passenger_count', getattr(request.concept_baseline, 'passenger_count', None))
+        if passenger_count is None or passenger_count <= 0:
+            errors.append("Valid passenger count (>0) is required to estimate MTOW and derive OpenVSP scale parameters.")
+            
+        return errors
+
     def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
         Executes iterative SizingAgent on SizingRequest inside the state.
@@ -122,20 +144,20 @@ class SizingAgent(BaseAIAgent):
         if not request:
             # Construct it from legacy inputs for backward compatibility during testing
             mission_profile = state.get("mission_profile")
-            aircraft_candidate = state.get("aircraft_candidate")
+            concept_baseline = state.get("aircraft_concept")
             requirements = state.get("requirements", [])
             
-            if not mission_profile or not aircraft_candidate:
-                raise ValueError("SizingAgent requires 'sizing_request' or 'mission_profile'+'aircraft_candidate' in state.")
+            if not mission_profile or not concept_baseline:
+                raise ValueError("SizingAgent requires 'sizing_request' or 'mission_profile'+'aircraft_concept' in state.")
                 
             req_id = self._generate_id("SIZ-REQ", mission_profile.mission_id if hasattr(mission_profile, "mission_id") else "UNKNOWN")
             request = SizingRequest(
                 sizing_request_id=req_id,
                 run_id="RUN-UNKNOWN",
                 mission_id="MISSION-UNKNOWN",
-                candidate_id=getattr(aircraft_candidate, 'candidate_id', 'AC-UNKNOWN'),
+                candidate_id=getattr(concept_baseline, 'concept_id', 'AC-UNKNOWN'),
                 mission_profile=mission_profile,
-                aircraft_candidate=aircraft_candidate,
+                concept_baseline=concept_baseline,
                 final_requirements=requirements
             )
             
@@ -154,7 +176,7 @@ class SizingAgent(BaseAIAgent):
         checks = []
 
         try:
-            template = self._get_template(request.aircraft_candidate, request.sizing_config, warnings)
+            template = self._get_template(request.concept_baseline, request.sizing_config, warnings)
         except ValueError as e:
             return SizingAgentResult(
                 sizing_agent_result_id=self._generate_id("SIZ-RESULT", request.sizing_request_id, "fail1"),
@@ -167,18 +189,55 @@ class SizingAgent(BaseAIAgent):
                 warnings=[str(e)]
             )
             
+        # OpenVSP schema validation check
+        validation_errors = self._validate_inputs_for_openvsp_schema(request, template)
+        if validation_errors:
+            return self._fail_result(request, "OpenVSP Schema Validation Failed: " + "; ".join(validation_errors))
+            
+            
         distance_km = self._get_mission_distance(request.mission_profile, warnings)
         if distance_km < 0:
             return self._fail_result(request, "Negative mission distance provided.")
             
-        payload = self._compute_payload(request.mission_profile, request.aircraft_candidate, request.sizing_config, assumptions)
-        passenger_count = getattr(request.mission_profile, 'passenger_count', getattr(request.aircraft_candidate, 'passenger_capacity', 1)) or 1
+        payload = self._compute_payload(request.mission_profile, request.concept_baseline, request.sizing_config, assumptions)
+        passenger_count = getattr(request.mission_profile, 'passenger_count', getattr(request.concept_baseline, 'passenger_count', 1)) or 1
         
         if passenger_count < 0:
             return self._fail_result(request, "Negative passenger count provided.")
 
-        # Iterative weight loop
-        mtow = payload * 3.0 # Initial guess
+        # Phase A: Initial MTOW Guess
+        weight_frac_sum = (
+            request.sizing_config.structural_weight_fraction +
+            request.sizing_config.propulsion_weight_fraction +
+            request.sizing_config.avionics_weight_fraction +
+            request.sizing_config.margin_fraction +
+            (request.sizing_config.default_battery_reserve_percent / 100.0) # Very rough initial battery fraction guess
+        )
+        
+        if weight_frac_sum >= 1.0:
+            return SizingAgentResult(
+                sizing_agent_result_id=self._generate_id("SIZ-RESULT", request.sizing_request_id, "fail_init"),
+                sizing_request_id=request.sizing_request_id,
+                run_id=request.run_id,
+                mission_id=request.mission_id,
+                candidate_id=request.candidate_id,
+                status="mission_revision_required",
+                conflict_report=f"Physical impossibility: The sum of heuristic weight fractions ({weight_frac_sum:.2f}) exceeds 1.0. The aircraft cannot carry its own weight. Please relax the mission constraints or allow lighter structures."
+            )
+            
+        mtow = payload / (1.0 - weight_frac_sum)
+        if mtow > 15000:
+            return SizingAgentResult(
+                sizing_agent_result_id=self._generate_id("SIZ-RESULT", request.sizing_request_id, "fail_init_heavy"),
+                sizing_request_id=request.sizing_request_id,
+                run_id=request.run_id,
+                mission_id=request.mission_id,
+                candidate_id=request.candidate_id,
+                status="mission_revision_required",
+                conflict_report=f"Initial MTOW guess ({mtow:.1f} kg) is unrealistically high for a {passenger_count}-passenger VTOL. Please reduce the payload or range requirements."
+            )
+
+        # Phase B: Iterative weight loop
         converged = False
         final_energy = None
         final_breakdown = None
@@ -190,7 +249,7 @@ class SizingAgent(BaseAIAgent):
             total_mission_energy = cruise_energy + hover_takeoff_energy
             
             reserve_fraction = request.sizing_config.default_battery_reserve_percent / 100.0
-            if reserve_fraction >= 0.8:
+            if reserve_fraction >= 0.8 and i == 0:
                 warnings.append("High battery reserve requirement.")
             
             battery_capacity = total_mission_energy / (1.0 - reserve_fraction)
@@ -202,6 +261,18 @@ class SizingAgent(BaseAIAgent):
             margin_weight = request.sizing_config.margin_fraction * mtow
             
             new_mtow = payload + battery_weight + empty_weight + propulsion_weight + avionics_weight + margin_weight
+            
+            # Divergence Check
+            if new_mtow > 20000 or (i > 5 and new_mtow > mtow * 1.5):
+                 return SizingAgentResult(
+                    sizing_agent_result_id=self._generate_id("SIZ-RESULT", request.sizing_request_id, "fail_diverge"),
+                    sizing_request_id=request.sizing_request_id,
+                    run_id=request.run_id,
+                    mission_id=request.mission_id,
+                    candidate_id=request.candidate_id,
+                    status="mission_revision_required",
+                    conflict_report=f"Sizing iteration diverged. The required battery weight for {distance_km} km range causes MTOW to spiral to infinity. Reduce range or payload."
+                )
             
             if abs(new_mtow - mtow) < request.sizing_config.convergence_tolerance_kg:
                 mtow = new_mtow
@@ -235,31 +306,14 @@ class SizingAgent(BaseAIAgent):
             mtow = new_mtow
 
         if not converged:
-            warnings.append("MTOW iteration did not converge.")
-            # Build fallback final energy / breakdown using last iteration values
-            final_energy = EnergySizingResult(
-                energy_sizing_id=self._generate_id("ENERGY", request.sizing_request_id, "fallback"),
+             return SizingAgentResult(
+                sizing_agent_result_id=self._generate_id("SIZ-RESULT", request.sizing_request_id, "fail_non_converge"),
+                sizing_request_id=request.sizing_request_id,
+                run_id=request.run_id,
+                mission_id=request.mission_id,
                 candidate_id=request.candidate_id,
-                mission_distance_km=distance_km,
-                cruise_energy_kwh=cruise_energy,
-                hover_energy_kwh=hover_takeoff_energy,
-                reserve_energy_kwh=battery_capacity - total_mission_energy,
-                total_mission_energy_kwh=total_mission_energy,
-                required_battery_capacity_kwh=battery_capacity,
-                selected_battery_capacity_kwh=battery_capacity,
-                estimated_arrival_battery_percent=100.0 * (battery_capacity - total_mission_energy) / battery_capacity,
-                estimated_battery_weight_kg=battery_weight
-            )
-            final_breakdown = WeightBreakdown(
-                payload_kg=payload,
-                passenger_weight_kg=passenger_count * request.sizing_config.passenger_mass_kg,
-                baggage_weight_kg=passenger_count * request.sizing_config.baggage_mass_per_passenger_kg,
-                empty_weight_kg=empty_weight,
-                battery_weight_kg=battery_weight,
-                propulsion_weight_kg=propulsion_weight,
-                avionics_weight_kg=avionics_weight,
-                margin_weight_kg=margin_weight,
-                mtow_kg=mtow
+                status="mission_revision_required",
+                conflict_report=f"MTOW iteration did not converge within {request.sizing_config.max_iterations} iterations. Final MTOW estimate was {mtow:.1f} kg. The physics constraints are conflicting."
             )
 
         # Power sizing
@@ -314,19 +368,50 @@ class SizingAgent(BaseAIAgent):
             single_rotor_area = total_disk_area / rotor_count
             rotor_radius = math.sqrt(single_rotor_area / math.pi)
 
+        # Fuselage sizing estimation for OpenVSP schema
+        # A rough heuristic: 1.2m length per passenger + 2m for cockpit/tail, width/height ~ 1.25m
+        fuselage_length = 2.0 + (passenger_count * 1.2)
+        fuselage_diameter = 1.25 + (0.1 * (passenger_count - 1)) if passenger_count > 1 else 1.25
+        
+        # Override and constrain with ConceptBaseline targets for OpenVSP schema
+        baseline = request.concept_baseline
+        if baseline.max_length_m:
+            fuselage_length = min(fuselage_length, baseline.max_length_m)
+            warnings.append(f"Fuselage length capped at baseline max_length_m: {baseline.max_length_m}")
+        if baseline.fuselage_width_m_target:
+            fuselage_diameter = baseline.fuselage_width_m_target
+            
+        if baseline.target_rotor_count and rotor_radius is not None:
+            rotor_count = baseline.target_rotor_count
+            single_rotor_area = total_disk_area / rotor_count
+            rotor_radius = math.sqrt(single_rotor_area / math.pi)
+            
+        if baseline.max_wingspan_m and wingspan is not None:
+            if wingspan > baseline.max_wingspan_m:
+                wingspan = baseline.max_wingspan_m
+                warnings.append(f"Wingspan capped at baseline max_wingspan_m: {baseline.max_wingspan_m}")
+                # Recompute root/tip chords to maintain aspect ratio/area if possible, but for low-fidelity we just cap.
+
         sizing_id = self._generate_id("SIZE", request.sizing_request_id)
         geom_result = GeometryParameterSet(
             geometry_param_id=self._generate_id("GEO", request.sizing_request_id),
             candidate_id=request.candidate_id,
             aircraft_type=template.aircraft_type,
+            fuselage_length_m=fuselage_length,
+            fuselage_diameter_m=fuselage_diameter,
             wing_area_m2=wing_area,
             wingspan_m=wingspan,
             root_chord_m=root_chord,
             tip_chord_m=tip_chord,
             aspect_ratio=template.default_aspect_ratio,
-            rotor_count=template.default_rotor_count,
+            rotor_count=rotor_count,
             rotor_radius_m=rotor_radius,
             total_disk_area_m2=total_disk_area,
+            fuselage_width_m=baseline.fuselage_width_m_target,
+            fuselage_height_m=baseline.fuselage_height_m_target,
+            cabin_length_m=fuselage_length * 0.5 if fuselage_length else None,
+            nose_length_m=fuselage_length * 0.15 if fuselage_length else None,
+            tailcone_length_m=fuselage_length * 0.35 if fuselage_length else None,
             source_sizing_id=sizing_id
         )
 

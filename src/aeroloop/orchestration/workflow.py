@@ -198,7 +198,6 @@ def certification_validator_node(state: WorkflowState):
     }
 
 def sizing_node(state: WorkflowState):
-    from aeroloop.schemas.aircraft import AircraftCandidate
     from aeroloop.schemas.engineering import SizingConfig, SizingRequest
     
     mission_profile = state.get("mission_profile")
@@ -211,19 +210,17 @@ def sizing_node(state: WorkflowState):
     candidate_id = f"AC-{hashlib.md5((run_id + 'AC').encode()).hexdigest()[:8]}"
     mission_id = mission_profile.mission_id if hasattr(mission_profile, 'mission_id') else f"M-{hashlib.md5(run_id.encode()).hexdigest()[:8]}"
     
-    candidate = AircraftCandidate(
-        candidate_id=candidate_id,
-        aircraft_type="lift_cruise_vtol",
-        passenger_capacity=mission_profile.passenger_count if hasattr(mission_profile, 'passenger_count') and mission_profile.passenger_count else 4
-    )
-    
+    concept_baseline = state.get("aircraft_concept")
+    if not concept_baseline:
+        return {"status": "error", "feedback_history": ["Missing aircraft_concept (ConceptBaseline) for sizing"]}
+
     req = SizingRequest(
         sizing_request_id=f"REQ-{hashlib.md5((run_id + candidate_id).encode()).hexdigest()[:8]}",
         run_id=run_id,
         mission_id=mission_id,
-        candidate_id=candidate.candidate_id,
+        candidate_id=candidate_id,
         mission_profile=mission_profile,
-        aircraft_candidate=candidate,
+        concept_baseline=concept_baseline,
         sizing_config=SizingConfig(),
         final_requirements=candidate_reqs
     )
@@ -243,9 +240,24 @@ def sizing_node(state: WorkflowState):
         for link in result.trace_links:
             registry.add_link(link)
     
+    # Handle mission revision request (HITL)
+    if result.status == "mission_revision_required":
+        current_unresolved = state.get("unresolved_questions", [])
+        hitl_prompt = f"Engineering Sizing Failed: {result.conflict_report}. Please provide a revised mission parameter (e.g., lower range or payload) to resolve this physical contradiction."
+        if hitl_prompt not in current_unresolved:
+            current_unresolved.append(hitl_prompt)
+            
+        return {
+            "sizing_result": result,
+            "status": "paused_for_hitl",
+            "unresolved_questions": current_unresolved,
+            "feedback_history": [f"Sizing Failed, HITL required: {result.conflict_report}"]
+        }
+        
     return {
         "sizing_result": result,
-        "status": "running",
+        "status": "running" if result.status in ["success", "success_with_warnings"] else "error",
+        "feedback_history": [f"Sizing Failed: {', '.join(result.warnings)}"] if result.status == "failed" else [],
         "traceability_registry": registry
     }
 

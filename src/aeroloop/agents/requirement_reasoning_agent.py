@@ -151,7 +151,8 @@ Vector DB Context (Use this as evidence if available):
 Instructions:
 1. Review the unresolved questions. If a parameter (like payload) is missing, invent a reasonable standard value (e.g. 100kg per passenger).
 2. For ANY new requirements you generate, the `requirement_type` MUST be strictly one of: "hard_constraint", "soft_objective", "report_only", or "manual_review". Do NOT use the word "assumption" here.
-4. synthesize the `final_requirements` into a high-level `concept_baseline` which acts as the SizingDraft for the SizingAgent.
+3. You MUST fully populate ALL OpenVSP architectural parameters in the `concept_baseline` based on mission context. These include: `target_rotor_count`, `max_wingspan_m`, `max_length_m`, `fuselage_width_m_target`, and `fuselage_height_m_target`. If not specified, invent reasonable constraints (e.g., UAM vertiports might dictate max_wingspan_m=15.0).
+4. synthesize the `final_requirements` into a high-level `concept_baseline` which acts as the SizingDraft for the SizingAgent. Physics-derived fields like mtow_kg and wing_area_m2 should be left blank as they will be calculated downstream.
 
 Format your response STRICTLY as a JSON object matching this structure:
 {{
@@ -163,6 +164,11 @@ Format your response STRICTLY as a JSON object matching this structure:
     "target_payload_kg": 400.0,
     "battery_reserve_percent_target": 20.0,
     "noise_level_target_db": 65.0,
+    "target_rotor_count": 8,
+    "max_wingspan_m": 15.0,
+    "max_length_m": 15.0,
+    "fuselage_width_m_target": 1.5,
+    "fuselage_height_m_target": 1.5,
     "assumptions": ["Standard 100kg per passenger payload"]
   }},
   "final_requirements": [

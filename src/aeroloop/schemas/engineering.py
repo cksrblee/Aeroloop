@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional, Dict, Any
 from .mission import MissionProfile
-from .aircraft import AircraftCandidate
+from .aircraft import AircraftCandidate, ConceptBaseline
 from .requirement import FinalRequirement
 from .traceability import TraceLink
 
@@ -34,7 +34,7 @@ class SizingRequest(BaseModel):
     candidate_id: str
 
     mission_profile: MissionProfile
-    aircraft_candidate: AircraftCandidate
+    concept_baseline: ConceptBaseline
     final_requirements: List[FinalRequirement] = Field(default_factory=list)
 
     sizing_config: SizingConfig = Field(default_factory=SizingConfig)
@@ -128,6 +128,31 @@ class GeometryParameterSet(BaseModel):
     rotor_count: Optional[int] = None
     rotor_radius_m: Optional[float] = None
     total_disk_area_m2: Optional[float] = None
+    
+    # Extended OpenVSP Parameters
+    fuselage_width_m: Optional[float] = None
+    fuselage_height_m: Optional[float] = None
+    cabin_length_m: Optional[float] = None
+    nose_length_m: Optional[float] = None
+    tailcone_length_m: Optional[float] = None
+    sweep_deg: Optional[float] = None
+    sweep_location: Optional[float] = None
+    dihedral_deg: Optional[float] = None
+    twist_root_deg: Optional[float] = None
+    twist_tip_deg: Optional[float] = None
+    htail_span_m: Optional[float] = None
+    htail_root_chord_m: Optional[float] = None
+    htail_tip_chord_m: Optional[float] = None
+    vtail_span_m: Optional[float] = None
+    vtail_root_chord_m: Optional[float] = None
+    vtail_tip_chord_m: Optional[float] = None
+    boom_length_m: Optional[float] = None
+    boom_diameter_m: Optional[float] = None
+    rotor_blade_count: Optional[int] = None
+    motor_pod_length_m: Optional[float] = None
+    motor_pod_diameter_m: Optional[float] = None
+    duct_diameter_m: Optional[float] = None
+    landing_gear_height_m: Optional[float] = None
     source_sizing_id: str
 
 class SimulationParameterSet(BaseModel):
@@ -186,7 +211,8 @@ class SizingAgentResult(BaseModel):
     run_id: str
     mission_id: str
     candidate_id: str
-    status: Literal["success", "success_with_warnings", "failed", "requires_template_selection"]
+    status: Literal["success", "success_with_warnings", "failed", "requires_template_selection", "mission_revision_required"]
+    conflict_report: Optional[str] = None
     
     sizing_result: Optional[SizingResult] = None
     energy_sizing_result: Optional[EnergySizingResult] = None
