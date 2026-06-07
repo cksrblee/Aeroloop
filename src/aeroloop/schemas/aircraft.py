@@ -48,7 +48,9 @@ class AircraftTemplate(BaseModel):
     pass
 
 class AircraftCandidate(BaseModel):
-    pass
+    candidate_id: str
+    aircraft_type: str = "unknown"
+    passenger_capacity: Optional[int] = None
 
 class CandidateScore(BaseModel):
     pass

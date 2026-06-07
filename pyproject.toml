@@ -15,7 +15,8 @@ dependencies = [
     "langchain",
     "langchain-openai",
     "langgraph",
-    "langfuse"
+    "langfuse",
+    "chromadb"
 ]
 
 [project.optional-dependencies]

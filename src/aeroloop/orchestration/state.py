@@ -6,6 +6,10 @@ from aeroloop.schemas.common import Assumption, ErrorInfo
 from aeroloop.schemas.regulation import RegulationEvidence
 from aeroloop.schemas.compliance import CertificationComplianceResult
 from aeroloop.schemas.aircraft import AircraftConcept
+from aeroloop.schemas.engineering import SizingAgentResult
+from aeroloop.schemas.geometry import GeometryDesignResult
+from aeroloop.schemas.analysis import AerodynamicsAnalysisResult
+from aeroloop.schemas.traceability import TraceabilityRegistry
 
 def add_items(a: list | None, b: list | None) -> list:
     """Merge two lists safely for LangGraph state."""
@@ -25,6 +29,16 @@ class WorkflowState(TypedDict):
     mission_profile: MissionProfile | None
     aircraft_concept: AircraftConcept | None
     certification_compliance_result: CertificationComplianceResult | None
+    sizing_result: SizingAgentResult | None
+    geometry_design_result: GeometryDesignResult | None
+    analysis_result: AerodynamicsAnalysisResult | None
+    
+    # Cyclic iteration trackers
+    sizing_iteration_count: int | None
+    global_iteration_count: int | None
+    
+    # Traceability and DB
+    traceability_registry: TraceabilityRegistry | None
     
     candidate_requirements: Annotated[list[CandidateRequirement], add_items]
     final_requirements: Annotated[list[FinalRequirement], add_items]

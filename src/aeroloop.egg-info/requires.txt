@@ -2,8 +2,10 @@ fastapi
 uvicorn
 pydantic
 langchain
+langchain-openai
 langgraph
 langfuse
+chromadb
 
 [dev]
 pytest

@@ -1,5 +1,6 @@
 import os
 import json
+import hashlib
 from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
@@ -36,6 +37,11 @@ class GeometryDesignAgent(BaseAIAgent):
             **kwargs
         )
         self.agent_version = agent_version
+
+    def _generate_id(self, prefix: str, base_id: str, salt: str = "") -> str:
+        """Generates a deterministic ID based on a base_id and salt."""
+        hash_str = hashlib.md5(f"{base_id}-{salt}".encode()).hexdigest()[:8]
+        return f"{prefix}-{hash_str}"
 
     @observe()
     def process_request(self, request: GeometryDesignRequest) -> GeometryDesignResult:
@@ -241,7 +247,7 @@ class GeometryDesignAgent(BaseAIAgent):
                       trace_links: List[TraceLink], comp_links: List[ComplianceArtifactLink],
                       warnings: List[str], errors: List[ErrorInfo], log: str) -> GeometryDesignResult:
         return GeometryDesignResult(
-            geometry_result_id=make_id("GEO-RESULT"),
+            geometry_result_id=self._generate_id("GEO-RESULT", request.geometry_request_id),
             geometry_request_id=request.geometry_request_id,
             run_id=request.run_id,
             candidate_id=request.candidate_id,

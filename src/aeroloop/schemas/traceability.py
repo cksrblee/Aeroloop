@@ -1,5 +1,5 @@
-from typing import Literal, Optional
-from pydantic import BaseModel
+from typing import Literal, Optional, List
+from pydantic import BaseModel, Field
 
 class TraceLink(BaseModel):
     trace_id: str
@@ -23,8 +23,17 @@ class TraceLink(BaseModel):
     rationale: Optional[str] = None
     confidence: Optional[float] = None
 
-class TraceabilityMatrix(BaseModel):
-    pass
+class TraceabilityRegistry(BaseModel):
+    links: List[TraceLink] = Field(default_factory=list)
+
+    def add_link(self, link: TraceLink):
+        self.links.append(link)
+
+    def get_downstream_items(self, source_id: str) -> List[str]:
+        return [link.target_id for link in self.links if link.source_id == source_id]
+
+    def get_upstream_items(self, target_id: str) -> List[str]:
+        return [link.source_id for link in self.links if link.target_id == target_id]
 
 class TraceabilityRow(BaseModel):
     pass

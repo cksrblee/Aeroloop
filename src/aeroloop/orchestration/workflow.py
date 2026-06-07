@@ -4,9 +4,14 @@ from aeroloop.agents.orchestrator_agent import OrchestratorAgent
 from aeroloop.agents.mission_parsing_agent import MissionParsingAgent
 from aeroloop.agents.customer_requirement_agent import CustomerRequirementAgent
 from aeroloop.agents.certification_compliance_agent import CertificationComplianceAgent
+from aeroloop.agents.sizing_agent import SizingAgent
+from aeroloop.agents.geometry_design_agent import GeometryDesignAgent
+from aeroloop.agents.aerodynamics_analysis_agent import AerodynamicsAnalysisAgent
 from aeroloop.llm.adapters import OpenAIAdapter
 from aeroloop.schemas.mission import MissionParsingInput
+from aeroloop.schemas.traceability import TraceabilityRegistry
 from datetime import datetime
+import hashlib
 
 # Initialize singletons / agents
 # We can inject these later, but for simplicity we instantiate them here.
@@ -15,11 +20,26 @@ mission_agent = MissionParsingAgent(llm_model=llm_adapter)
 customer_agent = CustomerRequirementAgent()
 cert_agent = CertificationComplianceAgent()
 orchestrator_agent = OrchestratorAgent()
+sizing_agent = SizingAgent()
+geometry_agent = GeometryDesignAgent()
+analysis_agent = AerodynamicsAnalysisAgent()
 
 def mission_parsing_node(state: WorkflowState):
     raw_input = state.get("raw_input")
     if not raw_input:
         return {"status": "error", "feedback_history": ["Missing raw_input for mission_parsing_node"]}
+        
+    # Initialize run_id and traceability_registry if not present
+    run_id = state.get("run_id")
+    if not run_id:
+        if isinstance(raw_input, MissionParsingInput):
+            run_id = f"RUN-{hashlib.md5(raw_input.raw_text.encode()).hexdigest()[:8]}"
+        else:
+            run_id = f"RUN-{hashlib.md5(str(raw_input).encode()).hexdigest()[:8]}"
+            
+    registry = state.get("traceability_registry")
+    if not registry:
+        registry = TraceabilityRegistry()
     
     try:
         result = mission_agent.parse(raw_input)
@@ -33,6 +53,8 @@ def mission_parsing_node(state: WorkflowState):
         
         return {
             "mission_profile": result.mission_profile,
+            "run_id": run_id,
+            "traceability_registry": registry,
             "status": "running"
         }
     except Exception as e:
@@ -95,12 +117,112 @@ def certification_compliance_node(state: WorkflowState):
     except Exception as e:
         return {"status": "error", "feedback_history": [f"Certification compliance failed: {str(e)}"]}
 
-def config_design_node(state: WorkflowState):
-    """
-    Placeholder node for the Config Design Agent.
-    It will handle unresolved_questions or needs_configuration_detail scenarios.
-    """
-    return {"status": "paused_for_input", "feedback_history": ["Config Design Agent not implemented yet. Pausing for human input."]}
+def sizing_node(state: WorkflowState):
+    from aeroloop.schemas.aircraft import AircraftCandidate
+    from aeroloop.schemas.engineering import SizingConfig, SizingRequest
+    
+    mission_profile = state.get("mission_profile")
+    candidate_reqs = state.get("candidate_requirements", [])
+    
+    if not mission_profile:
+        return {"status": "error", "feedback_history": ["Missing mission_profile for sizing"]}
+        
+    run_id = state.get("run_id", "run-001")
+    candidate_id = f"AC-{hashlib.md5((run_id + 'AC').encode()).hexdigest()[:8]}"
+    mission_id = mission_profile.mission_id if hasattr(mission_profile, 'mission_id') else f"M-{hashlib.md5(run_id.encode()).hexdigest()[:8]}"
+    
+    candidate = AircraftCandidate(
+        candidate_id=candidate_id,
+        aircraft_type="lift_cruise_vtol",
+        passenger_capacity=mission_profile.passenger_count if hasattr(mission_profile, 'passenger_count') and mission_profile.passenger_count else 4
+    )
+    
+    req = SizingRequest(
+        sizing_request_id=f"REQ-{hashlib.md5((run_id + candidate_id).encode()).hexdigest()[:8]}",
+        run_id=run_id,
+        mission_id=mission_id,
+        candidate_id=candidate.candidate_id,
+        mission_profile=mission_profile,
+        aircraft_candidate=candidate,
+        sizing_config=SizingConfig(),
+        final_requirements=candidate_reqs
+    )
+    
+    result = sizing_agent.size(req)
+    
+    # Store TraceLinks to Registry
+    registry = state.get("traceability_registry")
+    if registry and result.trace_links:
+        for link in result.trace_links:
+            registry.add_link(link)
+    
+    return {
+        "sizing_result": result,
+        "status": "running",
+        "traceability_registry": registry
+    }
+
+def geometry_design_node(state: WorkflowState):
+    from aeroloop.schemas.geometry import GeometryDesignRequest, ValidationOptions
+    
+    sizing_result = state.get("sizing_result")
+    if not sizing_result or not sizing_result.geometry_parameter_set:
+        return {"status": "error", "feedback_history": ["Missing sizing_result for geometry design"]}
+        
+    run_id = state.get("run_id", "run-001")
+    config_id = f"CFG-{hashlib.md5((run_id + sizing_result.candidate_id).encode()).hexdigest()[:8]}"
+    
+    req = GeometryDesignRequest(
+        geometry_request_id=f"GEO-REQ-{hashlib.md5(config_id.encode()).hexdigest()[:8]}",
+        run_id=run_id,
+        candidate_id=sizing_result.candidate_id,
+        configuration_id=config_id,
+        vehicle_type=sizing_result.geometry_parameter_set.aircraft_type,
+        design_parameters=sizing_result.geometry_parameter_set.dict(exclude_none=True),
+        output_directory=".agents/geometry_output",
+        validation_options=ValidationOptions(validate_mesh=False)
+    )
+    
+    result = geometry_agent.process_request(req)
+    
+    # Store TraceLinks to Registry
+    registry = state.get("traceability_registry")
+    if registry and result.trace_links:
+        for link in result.trace_links:
+            registry.add_link(link)
+    
+    return {
+        "geometry_design_result": result,
+        "status": "running",
+        "traceability_registry": registry
+    }
+
+def aerodynamics_analysis_node(state: WorkflowState):
+    from aeroloop.schemas.analysis import AerodynamicsAnalysisRequest
+    
+    geo_result = state.get("geometry_design_result")
+    if not geo_result or not geo_result.geometry_vsp3_path:
+        return {"status": "error", "feedback_history": ["Missing geometry_design_result for simulation"]}
+        
+    req = AerodynamicsAnalysisRequest(
+        geometry_vsp3_path=geo_result.geometry_vsp3_path,
+        analysis_type="mass_props"
+    )
+    
+    # We pass the request directly via dict to run() matching BaseAIAgent expectations
+    res = analysis_agent.run({"analysis_request": req})
+    
+    # Extract the result and return state updates
+    analysis_result = res.get("analysis_result")
+    if not analysis_result:
+        return {"status": "error", "feedback_history": ["Analysis failed to return a result."]}
+        
+    # We can pass success back or error back. The orchestrator agent handles cyclic routing.
+    return {
+        "analysis_result": analysis_result,
+        "status": "error" if analysis_result.status == "failed" else "running",
+        "feedback_history": [f"Simulation failed: {analysis_result.error}"] if analysis_result.status == "failed" else []
+    }
 
 def orchestrator_node(state: WorkflowState):
     return orchestrator_agent(state)
@@ -118,14 +240,18 @@ def create_workflow():
     workflow.add_node("mission_parsing", mission_parsing_node)
     workflow.add_node("customer_requirement", customer_requirement_node)
     workflow.add_node("certification_compliance", certification_compliance_node)
-    workflow.add_node("config_design", config_design_node)
+    workflow.add_node("sizing", sizing_node)
+    workflow.add_node("geometry_design", geometry_design_node)
+    workflow.add_node("aerodynamics_analysis", aerodynamics_analysis_node)
     workflow.add_node("orchestrator", orchestrator_node)
     
     # All agent nodes route back to the orchestrator to decide the next step
     workflow.add_edge("mission_parsing", "orchestrator")
     workflow.add_edge("customer_requirement", "orchestrator")
     workflow.add_edge("certification_compliance", "orchestrator")
-    workflow.add_edge("config_design", "orchestrator")
+    workflow.add_edge("sizing", "orchestrator")
+    workflow.add_edge("geometry_design", "orchestrator")
+    workflow.add_edge("aerodynamics_analysis", "orchestrator")
     
     # Initial edge routes to orchestrator which will decide what to do
     workflow.add_edge(START, "orchestrator")
@@ -138,7 +264,9 @@ def create_workflow():
             "mission_parsing": "mission_parsing",
             "customer_requirement": "customer_requirement",
             "certification_compliance": "certification_compliance",
-            "config_design": "config_design",
+            "sizing": "sizing",
+            "geometry_design": "geometry_design",
+            "aerodynamics_analysis": "aerodynamics_analysis",
             "END": END
         }
     )

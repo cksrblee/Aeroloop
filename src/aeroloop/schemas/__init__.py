@@ -17,7 +17,13 @@ from .common import (
 )
 
 from .aircraft import AircraftCandidate
-from .engineering import SimulationParameterSet
+from .engineering import (
+    SimulationParameterSet, SizingResult, PerformanceEstimate,
+    SizingRequest, SizingAgentResult, SizingConfig, SizingTemplate,
+    WeightBreakdown, EnergySizingResult, PowerSizingResult,
+    GeometryParameterSet, FeasibilityReport, FeasibilityCheck,
+    ComplianceContext, ComplianceArtifactLink
+)
 from .environment import EnvironmentProxyMap
 from .planning import FlightPath
 from .simulation import SimulationRunLog
@@ -65,6 +71,20 @@ __all__ = [
     
     # Existing objects
     "AircraftCandidate",
+    "SizingRequest",
+    "SizingAgentResult",
+    "SizingConfig",
+    "SizingTemplate",
+    "WeightBreakdown",
+    "SizingResult",
+    "EnergySizingResult",
+    "PowerSizingResult",
+    "GeometryParameterSet",
+    "PerformanceEstimate",
+    "FeasibilityReport",
+    "FeasibilityCheck",
+    "ComplianceContext",
+    "ComplianceArtifactLink",
     "SimulationParameterSet",
     "EnvironmentProxyMap",
     "FlightPath",

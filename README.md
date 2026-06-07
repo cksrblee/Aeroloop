@@ -105,6 +105,19 @@ AeroLoop는 단순 선형적인 파이프라인이 아닌 **양방향 상태 기
 `Orchestrator Agent`가 중앙 라우터(Hub) 역할을 수행하여, 각 에이전트의 실행 결과를 평가하고 다음 실행할 노드(Agent)를 결정합니다. 
 특히 **`unresolved_questions`(미해결 이슈)**나 **`needs_configuration_detail`(상세 형상 필요)** 상태가 감지되면, 이를 무시하거나 에러로 처리하지 않고 다음 에이전트인 `Config Design Agent`로 전달하여 초기 가정(Baseline)을 수립하거나 HITL(Human-in-the-loop) 피드백을 받도록 영리하게 분기(Routing)합니다.
 
+### Workflow (Agents)
+  - MissionParsingAgent
+  - RequirementReasoningAgent
+  - AircraftCandidateGenerator
+  - CertificationRequirementAgent / CCL Agent
+  - SizingAgent
+  - GeometryDesignAgent
+  - SimulationAgent
+  - PathPlanningAgent
+  - RuntimeVerificationAgent
+  - CertificationComplianceAgent
+  - ReportGenerationAgent
+
 ```text
 자연어 임무 입력
        ↓
@@ -118,7 +131,8 @@ AeroLoop는 단순 선형적인 파이프라인이 아닌 **양방향 상태 기
  [Mission Parsing] --------+
  [Customer Req]    --------+
  [Certification]   --------+
- [Config Design]   --------+ (미해결 이슈 및 기체 스펙 초기안 수립 / HITL)
+ [Sizing]          --------+ (미해결 이슈 및 기체 스펙 초기안 수립 / HITL)
+ [Geometry Design] --------+ (3D 형상 파라미터 컴파일 및 메쉬 생성)
  [Simulation]      --------+
        ↓
      [END]
