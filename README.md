@@ -288,7 +288,50 @@ graph TD
 aero-run workflow "건국대 캠퍼스 안에서 2명이 탑승하는 eVTOL..."
 # 또는
 aero-run workflow "demo"
+---
+
+## OpenVSP 연동 (Geometry & Analysis)
+
+AeroLoop는 파라메트릭 형상 생성 및 공력/질량 해석을 위해 **OpenVSP**를 백엔드로 사용합니다. OpenVSP는 C++ 기반 도구이며 Python API를 통해 에이전트들과 통신합니다.
+
+### 1. 빌드 및 경로 설정
+OpenVSP는 프로젝트의 `thirdparty` 디렉토리 하위에 소스 코드 형태로 클론되어 빌드됩니다. 
+- **설치 스크립트**: `scripts/install_openvsp.sh`
+- **빌드 경로**: `/root/projects/AeroLoop/thirdparty/build_openvsp`
+- **Python API 경로**: `/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp`
+
+### 2. 코드에서 OpenVSP 사용하기
+Python 환경에서 OpenVSP 모듈(`openvsp`)을 불러오기 위해서는 시스템 경로(`sys.path`)에 위 API 경로를 추가해야 합니다.
+AeroLoop의 에이전트(`GeometryDesignAgent`, `AerodynamicsAnalysisAgent`) 내부나 스크립트 상단에는 다음과 같은 경로 주입 로직이 포함되어 있습니다.
+
+```python
+import os
+import sys
+
+# OpenVSP Python API 경로 추가
+openvsp_path = os.environ.get("OPENVSP_PYTHON_PATH", "/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp")
+if openvsp_path not in sys.path:
+    sys.path.insert(0, openvsp_path)
+
+import openvsp as vsp
+
+# OpenVSP 초기화 및 컴포넌트 추가 예시
+vsp.VSPRenew()
+geom_id = vsp.AddGeom("FUSELAGE")
+vsp.SetParmVal(vsp.FindParm(geom_id, "Length", "Design"), 10.0)
 ```
+
+### 3. YAML 기반 템플릿 제어
+파라미터를 하드코딩하는 대신, 유연한 확장을 위해 **YAML 기반 템플릿 방식**을 사용합니다.
+- **템플릿 파일**: `src/aeroloop/design/openvsp_maximal_geometry_template.yaml`
+- **템플릿 실행기**: `src/aeroloop/design/openvsp_template_executor.py`
+
+`GeometryDesignAgent`는 Sizing 정보를 담은 `GeometryDesignRequest`를 받아, 이 템플릿 파일을 읽은 후 동체, 날개, 프로펠러 등 각 컴포넌트의 파라미터를 OpenVSP API(`SetParmVal`)로 주입하고 최종적으로 `.vsp3` 및 `.stl` 파일을 출력합니다.
+
+### 4. 대화형 데모 서버 (Chat-to-Geometry)
+AeroLoop는 자연어로 형상을 편집할 수 있는 인터랙티브 웹 데모를 지원합니다.
+- **실행 방법**: `uvicorn server:app --port 8080 --host 0.0.0.0` (demo 폴더 내부에서)
+- **주요 기능**: LLM(`gpt-5.4-mini` 등)이 사용자의 자연어("날개 길이 10미터로 늘려줘", "드론 템플릿으로 바꿔줘")를 분석하여 형상 파라미터를 추출하고, `GeometryDesignAgent`를 호출해 즉시 3D 모델(STL)을 웹 브라우저에 렌더링합니다.
 
 ---
 

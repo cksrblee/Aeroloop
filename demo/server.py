@@ -55,7 +55,7 @@ def generate_geometry():
         mission_id="mission-demo",
         candidate_id=candidate_id,
         configuration_id="config-demo",
-        vehicle_type="drone" if vsp_state["template"] == "drone" else "fixed_wing",
+        vehicle_type="multirotor" if vsp_state["template"] == "drone" else "fixed_wing",
         geometry_template=vsp_state.get("template", "airplane"),
         parameter_sources=[],
         design_parameters=vsp_state,
@@ -75,15 +75,17 @@ def generate_geometry():
         print("Agent failed to generate geometry:", res.errors)
         return None, None
 
-def run_analysis(vsp3_path):
+def run_analysis(vsp3_path, analysis_type="mass_props"):
     if not vsp3_path:
         return {"Error": "No geometry generated"}
         
     req = AerodynamicsAnalysisRequest(
         geometry_vsp3_path=vsp3_path,
-        analysis_type="mass_props"
+        analysis_type=analysis_type
     )
+    print(f"[ANALYSIS] Running analysis_agent ({analysis_type}) on {vsp3_path}")
     res = analysis_agent.process_request(req)
+    print(f"[ANALYSIS] analysis_agent returned status: {res.status}")
     
     if res.status == "success":
         return res.metrics
@@ -143,6 +145,7 @@ def parse_with_llm(message: str):
             temperature=0.0
         )
         import json
+# Trigger reload 5
         content = response.choices[0].message.content
         return json.loads(content)
     except Exception as e:
@@ -185,16 +188,27 @@ def parse_with_regex(message: str):
 @app.post("/api/chat")
 def chat_endpoint(req: ChatRequest):
     global current_stl, current_vsp3, vsp_state
+    print(f"\n[CHAT] Received message: {req.message}")
     
     # Try LLM first
     updates = parse_with_llm(req.message)
+    print(f"[CHAT] LLM extracted updates: {updates}")
+    
     if not updates:
         updates = parse_with_regex(req.message)
+        print(f"[CHAT] Regex extracted updates: {updates}")
         
     # Check if analysis is requested
     analysis_results = None
-    if "해석" in req.message or "분석" in req.message or "analyze" in req.message.lower() or "면적" in req.message or "부피" in req.message:
-        analysis_results = run_analysis(current_vsp3)
+    msg_lower = req.message.lower()
+    if any(k in msg_lower for k in ["공력", "양력", "항력", "aero", "lift", "drag"]):
+        print(f"[CHAT] Aero Analysis requested on current_vsp3: {current_vsp3}")
+        analysis_results = run_analysis(current_vsp3, analysis_type="aerodynamics")
+        print(f"[CHAT] Aero Analysis returned: {analysis_results}")
+    elif any(k in msg_lower for k in ["해석", "분석", "analyze", "면적", "부피"]):
+        print(f"[CHAT] Mass Analysis requested on current_vsp3: {current_vsp3}")
+        analysis_results = run_analysis(current_vsp3, analysis_type="mass_props")
+        print(f"[CHAT] Mass Analysis returned: {analysis_results}")
         
     if not updates and not analysis_results:
         return {
@@ -222,9 +236,17 @@ def chat_endpoint(req: ChatRequest):
         updated_str = ", ".join([f"{k}: {v}" for k, v in updates.items()])
         reply_parts.append(f"파라미터가 업데이트 되었습니다: {updated_str}.")
     if analysis_results:
-        vol = analysis_results.get("Volume", "N/A")
-        wet = analysis_results.get("Wetted_Area", "N/A")
-        reply_parts.append(f"해석 결과: 부피={vol}, 표면적={wet}.")
+        if "Volume" in analysis_results:
+            vol = analysis_results.get("Volume", "N/A")
+            wet = analysis_results.get("Wetted_Area", "N/A")
+            reply_parts.append(f"형상 해석 결과 - 부피: {vol}, 표면적: {wet}")
+        elif "CL" in analysis_results:
+            cl = analysis_results.get("CL", "N/A")
+            cd = analysis_results.get("CD", "N/A")
+            ld = analysis_results.get("L_D", "N/A")
+            reply_parts.append(f"공력 해석 결과 (Alpha=5°) - 양력 계수(CL): {cl}, 항력 계수(CD): {cd}, 양항비(L/D): {ld}")
+        else:
+            reply_parts.append(f"해석 결과: {analysis_results}")
         
     reply = " ".join(reply_parts)
     

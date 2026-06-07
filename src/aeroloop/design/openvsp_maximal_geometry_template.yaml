@@ -131,9 +131,9 @@ common_parm_blocks:
       - {name: X_Rel_Rotation, group: XForm, value: 0.0, required: false}
       - {name: Y_Rel_Rotation, group: XForm, value: 0.0, required: false}
       - {name: Z_Rel_Rotation, group: XForm, value: 0.0, required: false}
-      - {name: X_Rel_Scale, group: XForm, value: 1.0, required: false}
-      - {name: Y_Rel_Scale, group: XForm, value: 1.0, required: false}
-      - {name: Z_Rel_Scale, group: XForm, value: 1.0, required: false}
+      # - {name: X_Rel_Scale, group: XForm, value: 1.0, required: false}
+      # - {name: Y_Rel_Scale, group: XForm, value: 1.0, required: false}
+      # - {name: Z_Rel_Scale, group: XForm, value: 1.0, required: false}
       - {name: Sym_Planar_Flag, group: Sym, value: 0, required: false}
       - {name: Sym_Axial_Flag, group: Sym, value: 0, required: false}
       - {name: Sym_Rot_N, group: Sym, value: 2, required: false}
@@ -141,7 +141,7 @@ common_parm_blocks:
     raw_vsp_parms:
       - {name: Tess_U, group: Shape, value: 24, required: false}
       - {name: Tess_W, group: Shape, value: 17, required: false}
-      - {name: SectTess_U, group: Shape, value: 8, required: false}
+      # - {name: SectTess_U, group: Shape, value: 8, required: false}
   attach:
     raw_vsp_parms:
       - {name: Trans_Attach_Flag, group: Attach, value: 0, required: false}
@@ -159,15 +159,15 @@ components:
     geom_type: "FUSELAGE"
     parent: null
     set_memberships: ["NonLifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     raw_vsp_parms:
       - {name: Length, group: Design, value_ref: fuselage_length_m, default: 7.5, required: true}
-      - {name: Diameter, group: Design, value_ref: fuselage_diameter_m, default: 1.25, required: false}
-      - {name: FineRatio, group: Design, value: 6.0, required: false}
-      - {name: OrderPolicy, group: Skinning, value: 0, required: false}
-      - {name: Smooth, group: Skinning, value: 1, required: false}
-      - {name: AllSym, group: Sym, value: 0, required: false}
+      # - {name: Diameter, group: Design, value_ref: fuselage_diameter_m, default: 1.25, required: false}
+      # - {name: FineRatio, group: Design, value: 6.0, required: false}
+      # - {name: OrderPolicy, group: Skinning, value: 0, required: false}
+      # - {name: Smooth, group: Skinning, value: 1, required: false}
+      # - {name: AllSym, group: Sym, value: 0, required: false}
     xsec_surfaces:
       - surf_index: 0
         xsecs:
@@ -177,23 +177,23 @@ components:
           - index: 1
             shape: "XS_SUPER_ELLIPSE"
             raw_vsp_parms:
-              - {name: XLocPercent, group: XSec, value: 0.12, required: false}
-              - {name: Width, group: XSecCurve, value_ref: fuselage_width_m, default: 1.20, required: false}
-              - {name: Height, group: XSecCurve, value_ref: fuselage_height_m, default: 1.30, required: false}
-              - {name: M, group: XSecCurve, value: 2.0, required: false}
-              - {name: N, group: XSecCurve, value: 2.0, required: false}
+              # - {name: XLocPercent, group: XSec, value: 0.12, required: false}
+              - {name: Super_Width, group: XSecCurve, value_ref: fuselage_width_m, default: 1.20, required: false}
+              - {name: Super_Height, group: XSecCurve, value_ref: fuselage_height_m, default: 1.30, required: false}
+              - {name: Super_M, group: XSecCurve, value: 2.0, required: false}
+              - {name: Super_N, group: XSecCurve, value: 2.0, required: false}
           - index: 2
             shape: "XS_ELLIPSE"
             raw_vsp_parms:
-              - {name: XLocPercent, group: XSec, value: 0.45, required: false}
-              - {name: Width, group: XSecCurve, value_ref: fuselage_width_m, default: 1.35, required: false}
-              - {name: Height, group: XSecCurve, value_ref: fuselage_height_m, default: 1.45, required: false}
+              # - {name: XLocPercent, group: XSec, value: 0.45, required: false}
+              - {name: Ellipse_Width, group: XSecCurve, value_ref: fuselage_width_m, default: 1.35, required: false}
+              - {name: Ellipse_Height, group: XSecCurve, value_ref: fuselage_height_m, default: 1.45, required: false}
           - index: 3
             shape: "XS_ELLIPSE"
             raw_vsp_parms:
-              - {name: XLocPercent, group: XSec, value: 0.78, required: false}
-              - {name: Width, group: XSecCurve, value: 0.75, required: false}
-              - {name: Height, group: XSecCurve, value: 0.85, required: false}
+              # - {name: XLocPercent, group: XSec, value: 0.78, required: false}
+              - {name: Ellipse_Width, group: XSecCurve, value: 0.75, required: false}
+              - {name: Ellipse_Height, group: XSecCurve, value: 0.85, required: false}
           - index: 4
             shape: "XS_POINT"
             note: "tail point"
@@ -210,7 +210,7 @@ components:
     geom_type: "WING"
     parent: null
     set_memberships: ["Lifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     transform_overrides:
       raw_vsp_parms:
@@ -219,11 +219,11 @@ components:
         - {name: Sym_Planar_Flag, group: Sym, value: 2, required: false} # commonly XZ mirror; validate in local VSP
     raw_vsp_parms:
       # Some Wing Parm names are section-dependent in OpenVSP. Keep these optional.
-      - {name: Span, group: Design, value_ref: wingspan_m, default: 10.0, required: false}
+      # - {name: Span, group: Design, value_ref: wingspan_m, default: 10.0, required: false}
       - {name: TotalSpan, group: WingGeom, value_ref: wingspan_m, default: 10.0, required: false}
       - {name: TotalArea, group: WingGeom, value_ref: wing_area_m2, default: 12.0, required: false}
-      - {name: Root_Chord, group: Design, value_ref: root_chord_m, default: 1.55, required: false}
-      - {name: Tip_Chord, group: Design, value_ref: tip_chord_m, default: 0.75, required: false}
+      # - {name: Root_Chord, group: Design, value_ref: root_chord_m, default: 1.55, required: false}
+      # - {name: Tip_Chord, group: Design, value_ref: tip_chord_m, default: 0.75, required: false}
       - {name: Sweep, group: XSec_1, value_ref: sweep_deg, default: 3.0, required: false}
       - {name: Sweep_Location, group: XSec_1, value_ref: sweep_location, default: 0.25, required: false}
       - {name: Dihedral, group: XSec_1, value_ref: dihedral_deg, default: 2.0, required: false}
@@ -247,7 +247,7 @@ components:
             - {name: CamberLoc, group: XSecCurve, value: 0.4, required: false}
             - {name: ThickChord, group: XSecCurve, value: 0.12, required: false}
           file: null
-    control_surfaces:
+    _control_surfaces:
       - name: "left_right_aileron"
         type: "SS_CONTROL"
         add_to_control_group: true
@@ -256,14 +256,14 @@ components:
           - {name: End_Location, group: SS_Control, value: 0.95, required: false}
           - {name: Length_C_Start, group: SS_Control, value: 0.22, required: false}
           - {name: Length_C_End, group: SS_Control, value: 0.24, required: false}
-          - {name: SurfType, group: SS_Control, value: 1, required: false}
-    subsurfaces:
+          # - {name: SurfType, group: SS_Control, value: 1, required: false}
+    _subsurfaces:
       - name: "wing_panel_line"
         type: "SS_LINE_ARRAY"
         raw_vsp_parms:
           - {name: ConstLineType, group: SS_LineArray, value: 1, required: false}
           - {name: Spacing, group: SS_LineArray, value: 0.20, required: false}
-    fea_structures:
+    _fea_structures:
       - name: "main_wing_structure"
         init_skin: true
         parts:
@@ -286,7 +286,7 @@ components:
     geom_type: "WING"
     parent: null
     set_memberships: ["Lifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     transform_overrides:
       raw_vsp_parms:
@@ -294,17 +294,17 @@ components:
         - {name: Z_Rel_Location, group: XForm, value: 0.55, required: false}
         - {name: Sym_Planar_Flag, group: Sym, value: 2, required: false}
     raw_vsp_parms:
-      - {name: Span, group: Design, value_ref: htail_span_m, default: 3.2, required: false}
-      - {name: Root_Chord, group: Design, value_ref: htail_root_chord_m, default: 0.9, required: false}
-      - {name: Tip_Chord, group: Design, value_ref: htail_tip_chord_m, default: 0.45, required: false}
+      - {name: Span, group: XSec_1, value_ref: htail_span_m, default: 3.2, scale: 0.5, required: false}
+      - {name: Root_Chord, group: XSec_1, value_ref: htail_root_chord_m, default: 0.9, required: false}
+      - {name: Tip_Chord, group: XSec_1, value_ref: htail_tip_chord_m, default: 0.45, required: false}
       - {name: Sweep, group: XSec_1, value: 8.0, required: false}
       - {name: Dihedral, group: XSec_1, value: 0.0, required: false}
-    control_surfaces:
+    _control_surfaces:
       - name: "elevator"
         type: "SS_CONTROL"
         raw_vsp_parms:
-          - {name: Start_Location, group: SS_Control, value: 0.10, required: false}
-          - {name: End_Location, group: SS_Control, value: 0.90, required: false}
+          # - {name: Start_Location, group: SS_Control, value: 0.10, required: false}
+          # - {name: End_Location, group: SS_Control, value: 0.90, required: false}
           - {name: Length_C_Start, group: SS_Control, value: 0.28, required: false}
           - {name: Length_C_End, group: SS_Control, value: 0.28, required: false}
 
@@ -314,7 +314,7 @@ components:
     geom_type: "WING"
     parent: null
     set_memberships: ["Lifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     transform_overrides:
       raw_vsp_parms:
@@ -322,16 +322,16 @@ components:
         - {name: Z_Rel_Location, group: XForm, value: 0.55, required: false}
         - {name: X_Rel_Rotation, group: XForm, value: 90.0, required: false}
     raw_vsp_parms:
-      - {name: Span, group: Design, value_ref: vtail_span_m, default: 1.6, required: false}
-      - {name: Root_Chord, group: Design, value_ref: vtail_root_chord_m, default: 1.0, required: false}
-      - {name: Tip_Chord, group: Design, value_ref: vtail_tip_chord_m, default: 0.35, required: false}
+      - {name: Span, group: XSec_1, value_ref: vtail_span_m, default: 1.6, required: false}
+      - {name: Root_Chord, group: XSec_1, value_ref: vtail_root_chord_m, default: 1.0, required: false}
+      - {name: Tip_Chord, group: XSec_1, value_ref: vtail_tip_chord_m, default: 0.35, required: false}
       - {name: Sweep, group: XSec_1, value: 22.0, required: false}
-    control_surfaces:
+    _control_surfaces:
       - name: "rudder"
         type: "SS_CONTROL"
         raw_vsp_parms:
-          - {name: Start_Location, group: SS_Control, value: 0.15, required: false}
-          - {name: End_Location, group: SS_Control, value: 0.92, required: false}
+          # - {name: Start_Location, group: SS_Control, value: 0.15, required: false}
+          # - {name: End_Location, group: SS_Control, value: 0.92, required: false}
           - {name: Length_C_Start, group: SS_Control, value: 0.30, required: false}
           - {name: Length_C_End, group: SS_Control, value: 0.30, required: false}
 
@@ -342,7 +342,7 @@ components:
     parent: null
     mirror_component: "right_boom"
     set_memberships: ["NonLifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     transform_overrides:
       raw_vsp_parms:
@@ -351,7 +351,7 @@ components:
         - {name: Z_Rel_Location, group: XForm, value: 0.05, required: false}
     raw_vsp_parms:
       - {name: Length, group: Design, value_ref: boom_length_m, default: 5.5, required: false}
-      - {name: Diameter, group: Design, value_ref: boom_diameter_m, default: 0.22, required: false}
+      # - {name: Diameter, group: Design, value_ref: boom_diameter_m, default: 0.22, required: false}
       - {name: FineRatio, group: Design, value: 20.0, required: false}
 
   right_boom:
@@ -360,7 +360,7 @@ components:
     geom_type: "POD"
     parent: null
     set_memberships: ["NonLifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     transform_overrides:
       raw_vsp_parms:
@@ -369,7 +369,7 @@ components:
         - {name: Z_Rel_Location, group: XForm, value: 0.05, required: false}
     raw_vsp_parms:
       - {name: Length, group: Design, value_ref: boom_length_m, default: 5.5, required: false}
-      - {name: Diameter, group: Design, value_ref: boom_diameter_m, default: 0.22, required: false}
+      # - {name: Diameter, group: Design, value_ref: boom_diameter_m, default: 0.22, required: false}
       - {name: FineRatio, group: Design, value: 20.0, required: false}
 
   lift_rotor_template:
@@ -383,22 +383,22 @@ components:
       - {name: rear_left_rotor,   x: 5.7, y: -3.2, z: 0.65, rotation_z: 0.0}
       - {name: rear_right_rotor,  x: 5.7, y: 3.2,  z: 0.65, rotation_z: 0.0}
     set_memberships: ["Propulsion", "Export"]
-    material: "PropDark"
+    # material: "PropDark"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     raw_vsp_parms:
       - {name: Diameter, group: Design, value_ref: rotor_diameter_m, default: 1.8, required: false}
       - {name: NumBlade, group: Design, value_ref: rotor_blade_count, default: 3, required: false}
-      - {name: BladeNum, group: Design, value_ref: rotor_blade_count, default: 3, required: false}
+      # - {name: BladeNum, group: Design, value_ref: rotor_blade_count, default: 3, required: false}
       - {name: Beta34, group: Design, value: 20.0, required: false}
       - {name: Feather, group: Design, value: 0.0, required: false}
       - {name: ReverseFlag, group: Design, value: 0, required: false}
     blade_sections:
       - index: 0
         raw_vsp_parms:
-          - {name: Chord, group: Prop_0, value: 0.12, required: false}
-          - {name: Twist, group: Prop_0, value: 25.0, required: false}
-          - {name: Rake, group: Prop_0, value: 0.0, required: false}
-          - {name: Skew, group: Prop_0, value: 0.0, required: false}
+          # - {name: Chord, group: Prop_0, value: 0.12, required: false}
+          # - {name: Twist, group: Prop_0, value: 25.0, required: false}
+          # - {name: Rake, group: Prop_0, value: 0.0, required: false}
+          # - {name: Skew, group: Prop_0, value: 0.0, required: false}
 
   motor_pod_template:
     enabled: true
@@ -411,12 +411,12 @@ components:
       - {name: rear_left_motor_pod,   x: 5.7, y: -3.2, z: 0.45}
       - {name: rear_right_motor_pod,  x: 5.7, y: 3.2,  z: 0.45}
     set_memberships: ["Propulsion", "NonLifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     raw_vsp_parms:
       - {name: Length, group: Design, value_ref: motor_pod_length_m, default: 0.65, required: false}
-      - {name: Diameter, group: Design, value_ref: motor_pod_diameter_m, default: 0.32, required: false}
-      - {name: FineRatio, group: Design, value: 2.0, required: false}
+      # - {name: Diameter, group: Design, value_ref: motor_pod_diameter_m, default: 0.32, required: false}
+      # - {name: FineRatio, group: Design, value: 2.0, required: false}
 
   optional_duct_template:
     enabled: false
@@ -429,13 +429,13 @@ components:
       - {name: rear_left_duct,   x: 5.7, y: -3.2, z: 0.65}
       - {name: rear_right_duct,  x: 5.7, y: 3.2,  z: 0.65}
     set_memberships: ["Propulsion", "NonLifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     raw_vsp_parms:
-      - {name: Diameter, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
-      - {name: Length, group: Design, value: 0.25, required: false}
-      - {name: Inlet_Dia, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
-      - {name: Exit_Dia, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
+      # - {name: Diameter, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
+      # - {name: Length, group: Design, value: 0.25, required: false}
+      # - {name: Inlet_Dia, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
+      # - {name: Exit_Dia, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
 
   landing_gear_left:
     enabled: true
@@ -443,7 +443,7 @@ components:
     geom_type: "POD"
     parent: null
     set_memberships: ["NonLifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     transform_overrides:
       raw_vsp_parms:
@@ -453,7 +453,7 @@ components:
         - {name: Y_Rel_Rotation, group: XForm, value: 90.0, required: false}
     raw_vsp_parms:
       - {name: Length, group: Design, value_ref: landing_gear_height_m, default: 0.6, required: false}
-      - {name: Diameter, group: Design, value: 0.06, required: false}
+      # - {name: Diameter, group: Design, value: 0.06, required: false}
       - {name: FineRatio, group: Design, value: 10.0, required: false}
 
   landing_gear_right:
@@ -462,7 +462,7 @@ components:
     geom_type: "POD"
     parent: null
     set_memberships: ["NonLifting", "Export"]
-    material: "DefaultWhite"
+    # material: "DefaultWhite"
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     transform_overrides:
       raw_vsp_parms:
@@ -472,7 +472,7 @@ components:
         - {name: Y_Rel_Rotation, group: XForm, value: 90.0, required: false}
     raw_vsp_parms:
       - {name: Length, group: Design, value_ref: landing_gear_height_m, default: 0.6, required: false}
-      - {name: Diameter, group: Design, value: 0.06, required: false}
+      # - {name: Diameter, group: Design, value: 0.06, required: false}
       - {name: FineRatio, group: Design, value: 10.0, required: false}
 
   # Generic OpenVSP geometry slots. Enable and add raw_vsp_parms as needed.
@@ -498,7 +498,7 @@ components:
     apply_common_blocks: ["transform_xform", "shape_tessellation"]
     raw_vsp_parms:
       - {name: Mode, group: Design, value_enum: "BOR_FLOWTHROUGH", required: false}
-      - {name: Diameter, group: Design, value: 1.0, required: false}
+      # - {name: Diameter, group: Design, value: 1.0, required: false}
       - {name: Length, group: Design, value: 2.0, required: false}
 
   optional_conformal_component:

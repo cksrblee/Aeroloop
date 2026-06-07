@@ -387,6 +387,74 @@ def run_sizing_agent(args):
         print(f"\n[ERROR] SizingAgent failed: {e}")
         raise
 
+def run_geometry_agent(args):
+    """Run the GeometryDesignAgent on a previously generated SizingAgentResult."""
+    print("Initializing GeometryDesignAgent...")
+    import sys
+    sys.path.insert(0, '/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp')
+    from aeroloop.agents.geometry_design_agent import GeometryDesignAgent
+    from aeroloop.schemas.engineering import SizingAgentResult
+    from aeroloop.schemas.geometry import GeometryDesignRequest, GeometryValidationOptions
+    
+    agent = GeometryDesignAgent()
+    
+    input_file = Path(args.input_file)
+    if not input_file.exists():
+        print(f"\n[ERROR] File not found: {input_file.absolute()}")
+        return
+
+    print(f"Loading sizing results from: {input_file.absolute()}")
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        sizing_res = SizingAgentResult(**data)
+        
+        geo_params = sizing_res.geometry_parameter_set
+        
+        out_dir = config.get_run_dir(sizing_res.run_id) / "geometry_artifacts"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        
+        req = GeometryDesignRequest(
+            geometry_request_id=f"REQ-GEO-{sizing_res.run_id[-6:]}",
+            run_id=sizing_res.run_id,
+            mission_id=sizing_res.mission_id,
+            candidate_id=sizing_res.candidate_id,
+            vehicle_type=geo_params.aircraft_type if geo_params else "lift_cruise_vtol",
+            geometry_template="lift_cruise_vtol_template_v1",
+            design_parameters=geo_params.model_dump(exclude_none=True) if geo_params else {},
+            output_directory=str(out_dir),
+            validation_options=GeometryValidationOptions(validate_mesh=True)
+        )
+    except Exception as e:
+        print(f"\n[ERROR] Failed to load inputs from {input_file.name}: {e}")
+        return
+
+    print("\n--- Running GeometryDesignAgent ---")
+    try:
+        result = agent.process_request(req)
+        
+        run_dir = config.get_run_dir(result.run_id)
+        output_file = run_dir / f"geometry_design_result.json"
+        
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(result.model_dump_json(indent=2))
+
+        print(f"\n[SUCCESS] Geometry Design completed. Status: {result.status}")
+        print(f"JSON Data saved to: {output_file.absolute()}")
+        
+        artifacts = result.geometry_artifacts
+        print(f"\n--- Summary ---")
+        if artifacts:
+            print(f"VSP3 File                 : {artifacts.vsp3_file_path}")
+            print(f"STL File                  : {artifacts.stl_file_path}")
+        print(f"Warnings                  : {len(result.warnings)}")
+        print(f"Errors                    : {len(result.errors)}")
+            
+    except Exception as e:
+        print(f"\n[ERROR] GeometryDesignAgent failed: {e}")
+        raise
+
 def run_validator_agent(args):
     """Run the CertificationValidatorAgent on a reasoning result and compliance result."""
     print("Initializing CertificationValidatorAgent...")
@@ -564,6 +632,14 @@ def main():
         help="Path to the JSON file containing the RequirementReasoningResult (e.g. results/default_user/RUN-XXX/requirement_reasoning_result.json)"
     )
 
+    # GeometryDesignAgent subparser
+    geometry_parser = subparsers.add_parser("geometry", help="Run the GeometryDesignAgent")
+    geometry_parser.add_argument(
+        "input_file",
+        type=str,
+        help="Path to the JSON file containing the SizingAgentResult (e.g. results/default_user/RUN-XXX/sizing_result.json)"
+    )
+
     # Workflow subparser
     workflow_parser = subparsers.add_parser("workflow", help="Run the Bidirectional LangGraph Workflow")
     workflow_parser.add_argument(
@@ -584,6 +660,8 @@ def main():
         run_reasoning_agent(args)
     elif args.agent == "sizing":
         run_sizing_agent(args)
+    elif args.agent == "geometry":
+        run_geometry_agent(args)
     elif args.agent == "validator":
         run_validator_agent(args)
     elif args.agent == "workflow":

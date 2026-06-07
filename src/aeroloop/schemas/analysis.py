@@ -9,3 +9,4 @@ class AerodynamicsAnalysisResult(BaseModel):
     status: str = Field(..., description="'success' or 'failed'")
     metrics: Dict[str, float] = Field(default_factory=dict, description="Key aerodynamic or mass metrics")
     error: Optional[str] = None
+    note: Optional[str] = None

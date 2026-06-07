@@ -12,3 +12,6 @@ thirdparty/
 *.vsp3
 *.stl
 *.pngresults/
+
+Unnamed*
+results/

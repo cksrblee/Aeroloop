@@ -110,7 +110,14 @@ def safe_set_parm(
         return
 
     try:
-        parm_id = vsp.FindParm(container_id, name, group)
+        parm_id = ""
+        if group in ("XSecCurve", "XSec"):
+            try:
+                parm_id = vsp.GetXSecParm(container_id, name)
+            except Exception:
+                pass
+        if not parm_id:
+            parm_id = vsp.FindParm(container_id, name, group)
     except Exception:
         parm_id = ""
 
