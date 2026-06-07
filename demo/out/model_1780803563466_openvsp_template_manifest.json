@@ -1,0 +1,2899 @@
+{
+  "geom_ids": {
+    "main_fuselage": "LGMOZOSJGV",
+    "main_wing": "BBVIDXEWLK",
+    "horizontal_tail": "LKYTZVXLJV",
+    "vertical_tail": "WZUCNIBJOM",
+    "left_boom": "KCERPKEAZT",
+    "right_boom": "ELOBUSBOFI",
+    "front_left_rotor": "BIZOWPGKWC",
+    "front_right_rotor": "VDZORRBFCL",
+    "rear_left_rotor": "XEBUOKQNLR",
+    "rear_right_rotor": "IOCANEEMYM",
+    "front_left_motor_pod": "JQCFFMWYHU",
+    "front_right_motor_pod": "YCEUJRHWPZ",
+    "rear_left_motor_pod": "ONDMLROOPZ",
+    "rear_right_motor_pod": "BTZLYYZPFF",
+    "landing_gear_left": "KXQJGQENHZ",
+    "landing_gear_right": "JFCXOVDMMT"
+  },
+  "warnings": [
+    "OpenVSP Parm not found: main_fuselage.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: main_fuselage.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: main_fuselage.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: main_fuselage.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: main_fuselage.Design.Diameter",
+    "OpenVSP Parm not found: main_fuselage.Design.FineRatio",
+    "OpenVSP Parm not found: main_fuselage.Skinning.OrderPolicy",
+    "OpenVSP Parm not found: main_fuselage.Skinning.Smooth",
+    "OpenVSP Parm not found: main_fuselage.Sym.AllSym",
+    "OpenVSP Parm not found: main_fuselage.xsec[1].XSec.XLocPercent",
+    "OpenVSP Parm not found: main_fuselage.xsec[1].XSecCurve.Width",
+    "OpenVSP Parm not found: main_fuselage.xsec[1].XSecCurve.Height",
+    "OpenVSP Parm not found: main_fuselage.xsec[1].XSecCurve.M",
+    "OpenVSP Parm not found: main_fuselage.xsec[1].XSecCurve.N",
+    "OpenVSP Parm not found: main_fuselage.xsec[2].XSec.XLocPercent",
+    "OpenVSP Parm not found: main_fuselage.xsec[2].XSecCurve.Width",
+    "OpenVSP Parm not found: main_fuselage.xsec[2].XSecCurve.Height",
+    "OpenVSP Parm not found: main_fuselage.xsec[3].XSec.XLocPercent",
+    "OpenVSP Parm not found: main_fuselage.xsec[3].XSecCurve.Width",
+    "OpenVSP Parm not found: main_fuselage.xsec[3].XSecCurve.Height",
+    "OpenVSP Parm not found: main_wing.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: main_wing.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: main_wing.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: main_wing.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: main_wing.Design.Span",
+    "OpenVSP Parm not found: main_wing.Design.Root_Chord",
+    "OpenVSP Parm not found: main_wing.Design.Tip_Chord",
+    "OpenVSP Parm not found: main_wing.wing_panel_line.SS_LineArray.ConstLineType",
+    "OpenVSP Parm not found: main_wing.wing_panel_line.SS_LineArray.Spacing",
+    "OpenVSP Parm not found: main_wing.left_right_aileron.SS_Control.Start_Location",
+    "OpenVSP Parm not found: main_wing.left_right_aileron.SS_Control.End_Location",
+    "OpenVSP Parm not found: main_wing.left_right_aileron.SS_Control.SurfType",
+    "OpenVSP Parm not found: horizontal_tail.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: horizontal_tail.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: horizontal_tail.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: horizontal_tail.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: horizontal_tail.Design.Span",
+    "OpenVSP Parm not found: horizontal_tail.Design.Root_Chord",
+    "OpenVSP Parm not found: horizontal_tail.Design.Tip_Chord",
+    "OpenVSP Parm not found: horizontal_tail.elevator.SS_Control.Start_Location",
+    "OpenVSP Parm not found: horizontal_tail.elevator.SS_Control.End_Location",
+    "OpenVSP Parm not found: vertical_tail.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: vertical_tail.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: vertical_tail.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: vertical_tail.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: vertical_tail.Design.Span",
+    "OpenVSP Parm not found: vertical_tail.Design.Root_Chord",
+    "OpenVSP Parm not found: vertical_tail.Design.Tip_Chord",
+    "OpenVSP Parm not found: vertical_tail.rudder.SS_Control.Start_Location",
+    "OpenVSP Parm not found: vertical_tail.rudder.SS_Control.End_Location",
+    "OpenVSP Parm not found: left_boom.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: left_boom.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: left_boom.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: left_boom.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: left_boom.Design.Diameter",
+    "OpenVSP Parm not found: right_boom.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: right_boom.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: right_boom.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: right_boom.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: right_boom.Design.Diameter",
+    "OpenVSP Parm not found: front_left_rotor.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: front_left_rotor.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: front_left_rotor.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: front_left_rotor.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: front_left_rotor.Design.BladeNum",
+    "OpenVSP Parm not found: front_right_rotor.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: front_right_rotor.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: front_right_rotor.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: front_right_rotor.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: front_right_rotor.Design.BladeNum",
+    "OpenVSP Parm not found: rear_left_rotor.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: rear_left_rotor.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: rear_left_rotor.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: rear_left_rotor.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: rear_left_rotor.Design.BladeNum",
+    "OpenVSP Parm not found: rear_right_rotor.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: rear_right_rotor.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: rear_right_rotor.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: rear_right_rotor.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: rear_right_rotor.Design.BladeNum",
+    "OpenVSP Parm not found: front_left_motor_pod.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: front_left_motor_pod.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: front_left_motor_pod.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: front_left_motor_pod.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: front_left_motor_pod.Design.Diameter",
+    "OpenVSP Parm not found: front_right_motor_pod.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: front_right_motor_pod.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: front_right_motor_pod.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: front_right_motor_pod.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: front_right_motor_pod.Design.Diameter",
+    "OpenVSP Parm not found: rear_left_motor_pod.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: rear_left_motor_pod.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: rear_left_motor_pod.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: rear_left_motor_pod.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: rear_left_motor_pod.Design.Diameter",
+    "OpenVSP Parm not found: rear_right_motor_pod.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: rear_right_motor_pod.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: rear_right_motor_pod.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: rear_right_motor_pod.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: rear_right_motor_pod.Design.Diameter",
+    "OpenVSP Parm not found: landing_gear_left.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: landing_gear_left.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: landing_gear_left.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: landing_gear_left.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: landing_gear_left.Design.Diameter",
+    "OpenVSP Parm not found: landing_gear_right.transform_xform.XForm.X_Rel_Scale",
+    "OpenVSP Parm not found: landing_gear_right.transform_xform.XForm.Y_Rel_Scale",
+    "OpenVSP Parm not found: landing_gear_right.transform_xform.XForm.Z_Rel_Scale",
+    "OpenVSP Parm not found: landing_gear_right.shape_tessellation.Shape.SectTess_U",
+    "OpenVSP Parm not found: landing_gear_right.Design.Diameter"
+  ],
+  "errors": [],
+  "unmatched_parms": [
+    {
+      "context": "main_fuselage.transform_xform",
+      "container_id": "LGMOZOSJGV",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "container_id": "LGMOZOSJGV",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "container_id": "LGMOZOSJGV",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "main_fuselage.shape_tessellation",
+      "container_id": "LGMOZOSJGV",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "main_fuselage",
+      "container_id": "LGMOZOSJGV",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 1.25
+    },
+    {
+      "context": "main_fuselage",
+      "container_id": "LGMOZOSJGV",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 6.0
+    },
+    {
+      "context": "main_fuselage",
+      "container_id": "LGMOZOSJGV",
+      "name": "OrderPolicy",
+      "group": "Skinning",
+      "value": 0
+    },
+    {
+      "context": "main_fuselage",
+      "container_id": "LGMOZOSJGV",
+      "name": "Smooth",
+      "group": "Skinning",
+      "value": 1
+    },
+    {
+      "context": "main_fuselage",
+      "container_id": "LGMOZOSJGV",
+      "name": "AllSym",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "main_fuselage.xsec[1]",
+      "container_id": "RJXYZBAUSH",
+      "name": "XLocPercent",
+      "group": "XSec",
+      "value": 0.12
+    },
+    {
+      "context": "main_fuselage.xsec[1]",
+      "container_id": "RJXYZBAUSH",
+      "name": "Width",
+      "group": "XSecCurve",
+      "value": 1.35
+    },
+    {
+      "context": "main_fuselage.xsec[1]",
+      "container_id": "RJXYZBAUSH",
+      "name": "Height",
+      "group": "XSecCurve",
+      "value": 1.45
+    },
+    {
+      "context": "main_fuselage.xsec[1]",
+      "container_id": "RJXYZBAUSH",
+      "name": "M",
+      "group": "XSecCurve",
+      "value": 2.0
+    },
+    {
+      "context": "main_fuselage.xsec[1]",
+      "container_id": "RJXYZBAUSH",
+      "name": "N",
+      "group": "XSecCurve",
+      "value": 2.0
+    },
+    {
+      "context": "main_fuselage.xsec[2]",
+      "container_id": "ZNHZDQOWDJ",
+      "name": "XLocPercent",
+      "group": "XSec",
+      "value": 0.45
+    },
+    {
+      "context": "main_fuselage.xsec[2]",
+      "container_id": "ZNHZDQOWDJ",
+      "name": "Width",
+      "group": "XSecCurve",
+      "value": 1.35
+    },
+    {
+      "context": "main_fuselage.xsec[2]",
+      "container_id": "ZNHZDQOWDJ",
+      "name": "Height",
+      "group": "XSecCurve",
+      "value": 1.45
+    },
+    {
+      "context": "main_fuselage.xsec[3]",
+      "container_id": "NUVXWXTPLM",
+      "name": "XLocPercent",
+      "group": "XSec",
+      "value": 0.78
+    },
+    {
+      "context": "main_fuselage.xsec[3]",
+      "container_id": "NUVXWXTPLM",
+      "name": "Width",
+      "group": "XSecCurve",
+      "value": 0.75
+    },
+    {
+      "context": "main_fuselage.xsec[3]",
+      "container_id": "NUVXWXTPLM",
+      "name": "Height",
+      "group": "XSecCurve",
+      "value": 0.85
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "container_id": "BBVIDXEWLK",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "container_id": "BBVIDXEWLK",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "container_id": "BBVIDXEWLK",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "main_wing.shape_tessellation",
+      "container_id": "BBVIDXEWLK",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "main_wing",
+      "container_id": "BBVIDXEWLK",
+      "name": "Span",
+      "group": "Design",
+      "value": 10.0
+    },
+    {
+      "context": "main_wing",
+      "container_id": "BBVIDXEWLK",
+      "name": "Root_Chord",
+      "group": "Design",
+      "value": 1.55
+    },
+    {
+      "context": "main_wing",
+      "container_id": "BBVIDXEWLK",
+      "name": "Tip_Chord",
+      "group": "Design",
+      "value": 0.75
+    },
+    {
+      "context": "main_wing.wing_panel_line",
+      "container_id": "",
+      "name": "ConstLineType",
+      "group": "SS_LineArray",
+      "value": 1
+    },
+    {
+      "context": "main_wing.wing_panel_line",
+      "container_id": "",
+      "name": "Spacing",
+      "group": "SS_LineArray",
+      "value": 0.2
+    },
+    {
+      "context": "main_wing.left_right_aileron",
+      "container_id": "ASLYFDFBWT",
+      "name": "Start_Location",
+      "group": "SS_Control",
+      "value": 0.62
+    },
+    {
+      "context": "main_wing.left_right_aileron",
+      "container_id": "ASLYFDFBWT",
+      "name": "End_Location",
+      "group": "SS_Control",
+      "value": 0.95
+    },
+    {
+      "context": "main_wing.left_right_aileron",
+      "container_id": "ASLYFDFBWT",
+      "name": "SurfType",
+      "group": "SS_Control",
+      "value": 1
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "container_id": "LKYTZVXLJV",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "container_id": "LKYTZVXLJV",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "container_id": "LKYTZVXLJV",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "horizontal_tail.shape_tessellation",
+      "container_id": "LKYTZVXLJV",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "horizontal_tail",
+      "container_id": "LKYTZVXLJV",
+      "name": "Span",
+      "group": "Design",
+      "value": 3.2
+    },
+    {
+      "context": "horizontal_tail",
+      "container_id": "LKYTZVXLJV",
+      "name": "Root_Chord",
+      "group": "Design",
+      "value": 0.9
+    },
+    {
+      "context": "horizontal_tail",
+      "container_id": "LKYTZVXLJV",
+      "name": "Tip_Chord",
+      "group": "Design",
+      "value": 0.45
+    },
+    {
+      "context": "horizontal_tail.elevator",
+      "container_id": "DTNYGWQTAX",
+      "name": "Start_Location",
+      "group": "SS_Control",
+      "value": 0.1
+    },
+    {
+      "context": "horizontal_tail.elevator",
+      "container_id": "DTNYGWQTAX",
+      "name": "End_Location",
+      "group": "SS_Control",
+      "value": 0.9
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "container_id": "WZUCNIBJOM",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "container_id": "WZUCNIBJOM",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "container_id": "WZUCNIBJOM",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "vertical_tail.shape_tessellation",
+      "container_id": "WZUCNIBJOM",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "vertical_tail",
+      "container_id": "WZUCNIBJOM",
+      "name": "Span",
+      "group": "Design",
+      "value": 1.6
+    },
+    {
+      "context": "vertical_tail",
+      "container_id": "WZUCNIBJOM",
+      "name": "Root_Chord",
+      "group": "Design",
+      "value": 1.0
+    },
+    {
+      "context": "vertical_tail",
+      "container_id": "WZUCNIBJOM",
+      "name": "Tip_Chord",
+      "group": "Design",
+      "value": 0.35
+    },
+    {
+      "context": "vertical_tail.rudder",
+      "container_id": "QAVEQQTBXX",
+      "name": "Start_Location",
+      "group": "SS_Control",
+      "value": 0.15
+    },
+    {
+      "context": "vertical_tail.rudder",
+      "container_id": "QAVEQQTBXX",
+      "name": "End_Location",
+      "group": "SS_Control",
+      "value": 0.92
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "container_id": "KCERPKEAZT",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "container_id": "KCERPKEAZT",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "container_id": "KCERPKEAZT",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "left_boom.shape_tessellation",
+      "container_id": "KCERPKEAZT",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "left_boom",
+      "container_id": "KCERPKEAZT",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 0.22
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "container_id": "ELOBUSBOFI",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "container_id": "ELOBUSBOFI",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "container_id": "ELOBUSBOFI",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "right_boom.shape_tessellation",
+      "container_id": "ELOBUSBOFI",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "right_boom",
+      "container_id": "ELOBUSBOFI",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 0.22
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "container_id": "BIZOWPGKWC",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "container_id": "BIZOWPGKWC",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "container_id": "BIZOWPGKWC",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_left_rotor.shape_tessellation",
+      "container_id": "BIZOWPGKWC",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "front_left_rotor",
+      "container_id": "BIZOWPGKWC",
+      "name": "BladeNum",
+      "group": "Design",
+      "value": 3
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "container_id": "VDZORRBFCL",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "container_id": "VDZORRBFCL",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "container_id": "VDZORRBFCL",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_right_rotor.shape_tessellation",
+      "container_id": "VDZORRBFCL",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "front_right_rotor",
+      "container_id": "VDZORRBFCL",
+      "name": "BladeNum",
+      "group": "Design",
+      "value": 3
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "container_id": "XEBUOKQNLR",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "container_id": "XEBUOKQNLR",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "container_id": "XEBUOKQNLR",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_left_rotor.shape_tessellation",
+      "container_id": "XEBUOKQNLR",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "rear_left_rotor",
+      "container_id": "XEBUOKQNLR",
+      "name": "BladeNum",
+      "group": "Design",
+      "value": 3
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "container_id": "IOCANEEMYM",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "container_id": "IOCANEEMYM",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "container_id": "IOCANEEMYM",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_right_rotor.shape_tessellation",
+      "container_id": "IOCANEEMYM",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "rear_right_rotor",
+      "container_id": "IOCANEEMYM",
+      "name": "BladeNum",
+      "group": "Design",
+      "value": 3
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "container_id": "JQCFFMWYHU",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "container_id": "JQCFFMWYHU",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "container_id": "JQCFFMWYHU",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_left_motor_pod.shape_tessellation",
+      "container_id": "JQCFFMWYHU",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "front_left_motor_pod",
+      "container_id": "JQCFFMWYHU",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 0.32
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "container_id": "YCEUJRHWPZ",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "container_id": "YCEUJRHWPZ",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "container_id": "YCEUJRHWPZ",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "front_right_motor_pod.shape_tessellation",
+      "container_id": "YCEUJRHWPZ",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "front_right_motor_pod",
+      "container_id": "YCEUJRHWPZ",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 0.32
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "container_id": "ONDMLROOPZ",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "container_id": "ONDMLROOPZ",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "container_id": "ONDMLROOPZ",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_left_motor_pod.shape_tessellation",
+      "container_id": "ONDMLROOPZ",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "rear_left_motor_pod",
+      "container_id": "ONDMLROOPZ",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 0.32
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "container_id": "BTZLYYZPFF",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "container_id": "BTZLYYZPFF",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "container_id": "BTZLYYZPFF",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "rear_right_motor_pod.shape_tessellation",
+      "container_id": "BTZLYYZPFF",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "rear_right_motor_pod",
+      "container_id": "BTZLYYZPFF",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 0.32
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "container_id": "KXQJGQENHZ",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "container_id": "KXQJGQENHZ",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "container_id": "KXQJGQENHZ",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "landing_gear_left.shape_tessellation",
+      "container_id": "KXQJGQENHZ",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "landing_gear_left",
+      "container_id": "KXQJGQENHZ",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 0.06
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "container_id": "JFCXOVDMMT",
+      "name": "X_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "container_id": "JFCXOVDMMT",
+      "name": "Y_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "container_id": "JFCXOVDMMT",
+      "name": "Z_Rel_Scale",
+      "group": "XForm",
+      "value": 1.0
+    },
+    {
+      "context": "landing_gear_right.shape_tessellation",
+      "container_id": "JFCXOVDMMT",
+      "name": "SectTess_U",
+      "group": "Shape",
+      "value": 8
+    },
+    {
+      "context": "landing_gear_right",
+      "container_id": "JFCXOVDMMT",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 0.06
+    }
+  ],
+  "applied_parms": [
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "GOLPCCXYRVD",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "IVDVEELCPZV",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "ECQNUAZJYMX",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "QPIRYVDRQBI",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "YNZKJDWJPUM",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "KZJAMFCDOGM",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "GZFJPJUSDJD",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "HXQEMABZFAK",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "main_fuselage.transform_xform",
+      "parm_id": "OLUFTCGSKQO",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "main_fuselage.shape_tessellation",
+      "parm_id": "YLQZJUFEEBG",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "main_fuselage.shape_tessellation",
+      "parm_id": "JYDPNPKQLVJ",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "main_fuselage",
+      "parm_id": "DEELZPLGMFD",
+      "name": "Length",
+      "group": "Design",
+      "value": 7.5
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "MHWHHPARDVM",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "GMFPFZULGYC",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "ATIGZRJFWSY",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "EFPBZCCWKLU",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "NSGOZFFIVBF",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "NORPIYTBJBJ",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "AXBSHNLOSJD",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "JHCOBJGULNC",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "main_wing.transform_xform",
+      "parm_id": "NEIFTXXNUKG",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "main_wing.shape_tessellation",
+      "parm_id": "IMIJHYJKTVJ",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "main_wing.shape_tessellation",
+      "parm_id": "RRSJABRXXMR",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "main_wing.transform_overrides",
+      "parm_id": "MHWHHPARDVM",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 2.7
+    },
+    {
+      "context": "main_wing.transform_overrides",
+      "parm_id": "ATIGZRJFWSY",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.15
+    },
+    {
+      "context": "main_wing.transform_overrides",
+      "parm_id": "AXBSHNLOSJD",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "main_wing",
+      "parm_id": "VVDKHSENIBC",
+      "name": "TotalSpan",
+      "group": "WingGeom",
+      "value": 10.0
+    },
+    {
+      "context": "main_wing",
+      "parm_id": "OWSFHCFTYMP",
+      "name": "TotalArea",
+      "group": "WingGeom",
+      "value": 12.0
+    },
+    {
+      "context": "main_wing",
+      "parm_id": "IJNGJQAULSP",
+      "name": "Sweep",
+      "group": "XSec_1",
+      "value": 3.0
+    },
+    {
+      "context": "main_wing",
+      "parm_id": "NMDIPUCTSOK",
+      "name": "Sweep_Location",
+      "group": "XSec_1",
+      "value": 0.25
+    },
+    {
+      "context": "main_wing",
+      "parm_id": "AGTNOXCJTTZ",
+      "name": "Dihedral",
+      "group": "XSec_1",
+      "value": 2.0
+    },
+    {
+      "context": "main_wing",
+      "parm_id": "PHGAALDLDSX",
+      "name": "Twist",
+      "group": "XSec_1",
+      "value": -2.0
+    },
+    {
+      "context": "main_wing",
+      "parm_id": "LAYOCDIMIEO",
+      "name": "RotateAirfoilMatchDideralFlag",
+      "group": "WingGeom",
+      "value": 1
+    },
+    {
+      "context": "main_wing.left_right_aileron",
+      "parm_id": "OZTVFRFYNFA",
+      "name": "Length_C_Start",
+      "group": "SS_Control",
+      "value": 0.22
+    },
+    {
+      "context": "main_wing.left_right_aileron",
+      "parm_id": "DWXKXUMUHKJ",
+      "name": "Length_C_End",
+      "group": "SS_Control",
+      "value": 0.24
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "UDSFCRYUMNH",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "NYVHCMILOHE",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "JBJDSTDDGSX",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "KZGRLAVBGUG",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "XTSKNTXORVQ",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "FDRNAIRXXIC",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "YCGAVYMRPPI",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "COIBGLJSNMN",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "horizontal_tail.transform_xform",
+      "parm_id": "HPZTKWAMJZY",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "horizontal_tail.shape_tessellation",
+      "parm_id": "IIKKTLGWTKM",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "horizontal_tail.shape_tessellation",
+      "parm_id": "JLFGUFOOJEM",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "horizontal_tail.transform_overrides",
+      "parm_id": "UDSFCRYUMNH",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 6.4
+    },
+    {
+      "context": "horizontal_tail.transform_overrides",
+      "parm_id": "JBJDSTDDGSX",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.55
+    },
+    {
+      "context": "horizontal_tail.transform_overrides",
+      "parm_id": "YCGAVYMRPPI",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "horizontal_tail",
+      "parm_id": "RFSSFNHIXZB",
+      "name": "Sweep",
+      "group": "XSec_1",
+      "value": 8.0
+    },
+    {
+      "context": "horizontal_tail",
+      "parm_id": "QNVCMJMXVFV",
+      "name": "Dihedral",
+      "group": "XSec_1",
+      "value": 0.0
+    },
+    {
+      "context": "horizontal_tail.elevator",
+      "parm_id": "HNEIINQIKYM",
+      "name": "Length_C_Start",
+      "group": "SS_Control",
+      "value": 0.28
+    },
+    {
+      "context": "horizontal_tail.elevator",
+      "parm_id": "NHCELGNNHBJ",
+      "name": "Length_C_End",
+      "group": "SS_Control",
+      "value": 0.28
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "UCZRDSLVIRY",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "NLCGWDGPNUB",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "CQXRHZCWSXB",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "FJIJCXRRCJT",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "MZRMESNGPKO",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "FYWPUJLPZIC",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "CQFVEFQCIBQ",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "BWGDWFNKMPS",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "vertical_tail.transform_xform",
+      "parm_id": "THXHKEOMHCI",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "vertical_tail.shape_tessellation",
+      "parm_id": "ESUYPDWIKYL",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "vertical_tail.shape_tessellation",
+      "parm_id": "YWZFROLJHZA",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "vertical_tail.transform_overrides",
+      "parm_id": "UCZRDSLVIRY",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 6.15
+    },
+    {
+      "context": "vertical_tail.transform_overrides",
+      "parm_id": "CQXRHZCWSXB",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.55
+    },
+    {
+      "context": "vertical_tail.transform_overrides",
+      "parm_id": "FJIJCXRRCJT",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 90.0
+    },
+    {
+      "context": "vertical_tail",
+      "parm_id": "VQMUTWJOXLF",
+      "name": "Sweep",
+      "group": "XSec_1",
+      "value": 22.0
+    },
+    {
+      "context": "vertical_tail.rudder",
+      "parm_id": "KUZUYBOXFLN",
+      "name": "Length_C_Start",
+      "group": "SS_Control",
+      "value": 0.3
+    },
+    {
+      "context": "vertical_tail.rudder",
+      "parm_id": "LCBHQWROTGQ",
+      "name": "Length_C_End",
+      "group": "SS_Control",
+      "value": 0.3
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "ESRMEKKPKWU",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "QBDOGBPSPUP",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "ENCGEBTFYUU",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "EAZDGKHUDMT",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "SAUWVWZBSHB",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "UEVOKOGCJBM",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "HTMUFZVIQVG",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "SIZTRGNLZGY",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "left_boom.transform_xform",
+      "parm_id": "MLBOBMQKRSO",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "left_boom.shape_tessellation",
+      "parm_id": "VYJAWWCGZXW",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "left_boom.shape_tessellation",
+      "parm_id": "IXCSGZFQKGF",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "left_boom.transform_overrides",
+      "parm_id": "ESRMEKKPKWU",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 2.2
+    },
+    {
+      "context": "left_boom.transform_overrides",
+      "parm_id": "QBDOGBPSPUP",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": -1.8
+    },
+    {
+      "context": "left_boom.transform_overrides",
+      "parm_id": "ENCGEBTFYUU",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.05
+    },
+    {
+      "context": "left_boom",
+      "parm_id": "BVHBVAYPTFD",
+      "name": "Length",
+      "group": "Design",
+      "value": 5.5
+    },
+    {
+      "context": "left_boom",
+      "parm_id": "FLRPIVPBWDD",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 20.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "AWIUBCRBTMZ",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "URXPGSAHUNY",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "FBRXHUBBLUN",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "TRNPAKUOSWR",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "PSDAEQCBESJ",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "NRJXPMOQEHU",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "BXPRAGCXQUI",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "WQQMSQPIDBK",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "right_boom.transform_xform",
+      "parm_id": "HORZLDLOBIO",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "right_boom.shape_tessellation",
+      "parm_id": "SUCZHTKPMNL",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "right_boom.shape_tessellation",
+      "parm_id": "BCMRJVSOQXY",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "right_boom.transform_overrides",
+      "parm_id": "AWIUBCRBTMZ",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 2.2
+    },
+    {
+      "context": "right_boom.transform_overrides",
+      "parm_id": "URXPGSAHUNY",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 1.8
+    },
+    {
+      "context": "right_boom.transform_overrides",
+      "parm_id": "FBRXHUBBLUN",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.05
+    },
+    {
+      "context": "right_boom",
+      "parm_id": "UQXFDAIVJDY",
+      "name": "Length",
+      "group": "Design",
+      "value": 5.5
+    },
+    {
+      "context": "right_boom",
+      "parm_id": "DDVAJEYOZWA",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 20.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "MNXGISKBVDZ",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "AOIBDFUDSXV",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "ASQNZTAGSZA",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "DUWRRTYLQLJ",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "IPAPDPOCMZB",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "YVMWQOSIKRA",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "TDNLEDTMKAR",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "JUVCQUDLZAB",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "front_left_rotor.transform_xform",
+      "parm_id": "EQOWXYMFMYO",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "front_left_rotor.shape_tessellation",
+      "parm_id": "EYVJCBFZJTN",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "front_left_rotor.shape_tessellation",
+      "parm_id": "VIYKZIQYRBR",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "front_left_rotor.transform_overrides",
+      "parm_id": "MNXGISKBVDZ",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 2.2
+    },
+    {
+      "context": "front_left_rotor.transform_overrides",
+      "parm_id": "AOIBDFUDSXV",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": -3.2
+    },
+    {
+      "context": "front_left_rotor.transform_overrides",
+      "parm_id": "ASQNZTAGSZA",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.65
+    },
+    {
+      "context": "front_left_rotor.transform_overrides",
+      "parm_id": "YVMWQOSIKRA",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_rotor",
+      "parm_id": "RBVRGNFKPAC",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 1.8
+    },
+    {
+      "context": "front_left_rotor",
+      "parm_id": "JWWFAGIRMPH",
+      "name": "NumBlade",
+      "group": "Design",
+      "value": 3
+    },
+    {
+      "context": "front_left_rotor",
+      "parm_id": "SVKMIJDGNAE",
+      "name": "Beta34",
+      "group": "Design",
+      "value": 20.0
+    },
+    {
+      "context": "front_left_rotor",
+      "parm_id": "FYVGILRCAXB",
+      "name": "Feather",
+      "group": "Design",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_rotor",
+      "parm_id": "MRMZVZYSEPK",
+      "name": "ReverseFlag",
+      "group": "Design",
+      "value": 0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "HGXTTGXLUWH",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "WEZPRTPJGKY",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "SWCKSNGSVYK",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "BCYOVLDKKPP",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "ETJCIWXBREH",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "YNTKBNUGQMJ",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "JSIWPCXXDFC",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "HZFSKVABFAB",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "front_right_rotor.transform_xform",
+      "parm_id": "ATFEZAWYEKV",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "front_right_rotor.shape_tessellation",
+      "parm_id": "LMHFMPEBTOK",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "front_right_rotor.shape_tessellation",
+      "parm_id": "NIQCSVUNDBV",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "front_right_rotor.transform_overrides",
+      "parm_id": "HGXTTGXLUWH",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 2.2
+    },
+    {
+      "context": "front_right_rotor.transform_overrides",
+      "parm_id": "WEZPRTPJGKY",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 3.2
+    },
+    {
+      "context": "front_right_rotor.transform_overrides",
+      "parm_id": "SWCKSNGSVYK",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.65
+    },
+    {
+      "context": "front_right_rotor.transform_overrides",
+      "parm_id": "YNTKBNUGQMJ",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_rotor",
+      "parm_id": "DQENMNSXNDU",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 1.8
+    },
+    {
+      "context": "front_right_rotor",
+      "parm_id": "XVLHXSKDOYP",
+      "name": "NumBlade",
+      "group": "Design",
+      "value": 3
+    },
+    {
+      "context": "front_right_rotor",
+      "parm_id": "CWZUQZFDHLP",
+      "name": "Beta34",
+      "group": "Design",
+      "value": 20.0
+    },
+    {
+      "context": "front_right_rotor",
+      "parm_id": "RDUEDOOUJJA",
+      "name": "Feather",
+      "group": "Design",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_rotor",
+      "parm_id": "KAYOSFSRUEY",
+      "name": "ReverseFlag",
+      "group": "Design",
+      "value": 0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "MZHAXIDXGGK",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "DATDGXZQJGI",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "NDMZKDKJUFX",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "INKTCTXFYZF",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "UPVGMVYUYIG",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "FSQSNGVOHQD",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "BJBUERZZESH",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "PFWJNJRBUCZ",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "rear_left_rotor.transform_xform",
+      "parm_id": "TEGOTXTLJXS",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "rear_left_rotor.shape_tessellation",
+      "parm_id": "ISYBEPMYHDC",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "rear_left_rotor.shape_tessellation",
+      "parm_id": "YSRYPUMPGWK",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "rear_left_rotor.transform_overrides",
+      "parm_id": "MZHAXIDXGGK",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 5.7
+    },
+    {
+      "context": "rear_left_rotor.transform_overrides",
+      "parm_id": "DATDGXZQJGI",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": -3.2
+    },
+    {
+      "context": "rear_left_rotor.transform_overrides",
+      "parm_id": "NDMZKDKJUFX",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.65
+    },
+    {
+      "context": "rear_left_rotor.transform_overrides",
+      "parm_id": "FSQSNGVOHQD",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_rotor",
+      "parm_id": "VAPJOELENPI",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 1.8
+    },
+    {
+      "context": "rear_left_rotor",
+      "parm_id": "NQKRDTWAWEF",
+      "name": "NumBlade",
+      "group": "Design",
+      "value": 3
+    },
+    {
+      "context": "rear_left_rotor",
+      "parm_id": "DGOWVSUMALM",
+      "name": "Beta34",
+      "group": "Design",
+      "value": 20.0
+    },
+    {
+      "context": "rear_left_rotor",
+      "parm_id": "KYLCXIRUGKV",
+      "name": "Feather",
+      "group": "Design",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_rotor",
+      "parm_id": "GWMTLBQBDJZ",
+      "name": "ReverseFlag",
+      "group": "Design",
+      "value": 0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "FHTTBSOLTMP",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "KBWQQVADYUN",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "ALLWXVSJNLU",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "CLVBBXCTDWP",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "KZUMFPOHISH",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "UCLYFJWDGOZ",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "IFAROTFYHMV",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "OEIFNKLRNKN",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "rear_right_rotor.transform_xform",
+      "parm_id": "UEIJWWAWGVV",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "rear_right_rotor.shape_tessellation",
+      "parm_id": "CLLDEPATMQX",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "rear_right_rotor.shape_tessellation",
+      "parm_id": "SBYDCRNXLDD",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "rear_right_rotor.transform_overrides",
+      "parm_id": "FHTTBSOLTMP",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 5.7
+    },
+    {
+      "context": "rear_right_rotor.transform_overrides",
+      "parm_id": "KBWQQVADYUN",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 3.2
+    },
+    {
+      "context": "rear_right_rotor.transform_overrides",
+      "parm_id": "ALLWXVSJNLU",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.65
+    },
+    {
+      "context": "rear_right_rotor.transform_overrides",
+      "parm_id": "UCLYFJWDGOZ",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_rotor",
+      "parm_id": "FHCWOHTXBQE",
+      "name": "Diameter",
+      "group": "Design",
+      "value": 1.8
+    },
+    {
+      "context": "rear_right_rotor",
+      "parm_id": "IBYRMSVRUHJ",
+      "name": "NumBlade",
+      "group": "Design",
+      "value": 3
+    },
+    {
+      "context": "rear_right_rotor",
+      "parm_id": "ZNZEXIJLKVS",
+      "name": "Beta34",
+      "group": "Design",
+      "value": 20.0
+    },
+    {
+      "context": "rear_right_rotor",
+      "parm_id": "ODWYLOJJUOY",
+      "name": "Feather",
+      "group": "Design",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_rotor",
+      "parm_id": "KQYEDSNNDKM",
+      "name": "ReverseFlag",
+      "group": "Design",
+      "value": 0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "AMNDQAOLXOK",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "FVJTPGMYSXP",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "AYNHXEJSWTR",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "LLFIEEONFWI",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "UEGGFVQDERX",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "OXSDENZDILG",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "ZTJNEORVIIE",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "HJAHPKZHDQP",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "front_left_motor_pod.transform_xform",
+      "parm_id": "HLLYYYPGLGC",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "front_left_motor_pod.shape_tessellation",
+      "parm_id": "WTINZTFMAXQ",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "front_left_motor_pod.shape_tessellation",
+      "parm_id": "NXAKFGRHCAR",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "front_left_motor_pod.transform_overrides",
+      "parm_id": "AMNDQAOLXOK",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 2.2
+    },
+    {
+      "context": "front_left_motor_pod.transform_overrides",
+      "parm_id": "FVJTPGMYSXP",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": -3.2
+    },
+    {
+      "context": "front_left_motor_pod.transform_overrides",
+      "parm_id": "AYNHXEJSWTR",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.45
+    },
+    {
+      "context": "front_left_motor_pod.transform_overrides",
+      "parm_id": "OXSDENZDILG",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_left_motor_pod",
+      "parm_id": "EMMFTZDDRBK",
+      "name": "Length",
+      "group": "Design",
+      "value": 0.65
+    },
+    {
+      "context": "front_left_motor_pod",
+      "parm_id": "YGMUKSCXHSB",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 2.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "JESFOXUPBGZ",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "WQXXAPYHZDV",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "YMUWSDKBNXC",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "DGQODZNXEDT",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "GVPOFATBCDM",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "JBNGPWRMJFW",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "QNSNSUOKFSE",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "UZFMCCPAIWA",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "front_right_motor_pod.transform_xform",
+      "parm_id": "TUISSZHXMFD",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "front_right_motor_pod.shape_tessellation",
+      "parm_id": "UULFYRBCNOT",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "front_right_motor_pod.shape_tessellation",
+      "parm_id": "KHLZSZOQDYN",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "front_right_motor_pod.transform_overrides",
+      "parm_id": "JESFOXUPBGZ",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 2.2
+    },
+    {
+      "context": "front_right_motor_pod.transform_overrides",
+      "parm_id": "WQXXAPYHZDV",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 3.2
+    },
+    {
+      "context": "front_right_motor_pod.transform_overrides",
+      "parm_id": "YMUWSDKBNXC",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.45
+    },
+    {
+      "context": "front_right_motor_pod.transform_overrides",
+      "parm_id": "JBNGPWRMJFW",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "front_right_motor_pod",
+      "parm_id": "LARNAAKXVXM",
+      "name": "Length",
+      "group": "Design",
+      "value": 0.65
+    },
+    {
+      "context": "front_right_motor_pod",
+      "parm_id": "FWLDKILPEGL",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 2.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "ZOQYCACRHIH",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "GZLLMHUZBME",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "WJFTPCQPYYA",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "RDBBLNDYTLY",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "IKIRARNLMZV",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "XNWENOZRFNA",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "PKJEXVTGUXV",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "GRLUZFVUCWU",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "rear_left_motor_pod.transform_xform",
+      "parm_id": "QQKZETLNNMP",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "rear_left_motor_pod.shape_tessellation",
+      "parm_id": "QCNTCSLGYDF",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "rear_left_motor_pod.shape_tessellation",
+      "parm_id": "XNVKEDPGSVF",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "rear_left_motor_pod.transform_overrides",
+      "parm_id": "ZOQYCACRHIH",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 5.7
+    },
+    {
+      "context": "rear_left_motor_pod.transform_overrides",
+      "parm_id": "GZLLMHUZBME",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": -3.2
+    },
+    {
+      "context": "rear_left_motor_pod.transform_overrides",
+      "parm_id": "WJFTPCQPYYA",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.45
+    },
+    {
+      "context": "rear_left_motor_pod.transform_overrides",
+      "parm_id": "XNWENOZRFNA",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_left_motor_pod",
+      "parm_id": "BTUFDONPTUI",
+      "name": "Length",
+      "group": "Design",
+      "value": 0.65
+    },
+    {
+      "context": "rear_left_motor_pod",
+      "parm_id": "AVNYTAFREHW",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 2.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "BXPQEUKUCNX",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "ITCVUZZYCNE",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "GGDATDDBXXH",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "PHIIGHMUYQW",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "UIZWRGEPBOO",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "QFSCHNKWDSY",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "AJFNHDOBFBG",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "IYFOSTCSLXM",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "rear_right_motor_pod.transform_xform",
+      "parm_id": "JTACTXHQDBP",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "rear_right_motor_pod.shape_tessellation",
+      "parm_id": "PNOEJZSYWTA",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "rear_right_motor_pod.shape_tessellation",
+      "parm_id": "BDLFDIWYLIH",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "rear_right_motor_pod.transform_overrides",
+      "parm_id": "BXPQEUKUCNX",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 5.7
+    },
+    {
+      "context": "rear_right_motor_pod.transform_overrides",
+      "parm_id": "ITCVUZZYCNE",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 3.2
+    },
+    {
+      "context": "rear_right_motor_pod.transform_overrides",
+      "parm_id": "GGDATDDBXXH",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.45
+    },
+    {
+      "context": "rear_right_motor_pod.transform_overrides",
+      "parm_id": "QFSCHNKWDSY",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "rear_right_motor_pod",
+      "parm_id": "MFAGORHHWYC",
+      "name": "Length",
+      "group": "Design",
+      "value": 0.65
+    },
+    {
+      "context": "rear_right_motor_pod",
+      "parm_id": "RNUOLQCOSWD",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 2.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "BJNURWKHMMG",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "MTOWYOMMBPU",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "VWEGCRDCSDU",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "WYGUFKEJJRW",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "LEWOWQBOWIA",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "YLUPDVHZVDC",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "NUWQEMMWVJC",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "AESKAPXCNEE",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "landing_gear_left.transform_xform",
+      "parm_id": "AIJNYFKTLPV",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "landing_gear_left.shape_tessellation",
+      "parm_id": "ZGUFOERPLFF",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "landing_gear_left.shape_tessellation",
+      "parm_id": "USVWPETYWUD",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "landing_gear_left.transform_overrides",
+      "parm_id": "BJNURWKHMMG",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 3.2
+    },
+    {
+      "context": "landing_gear_left.transform_overrides",
+      "parm_id": "MTOWYOMMBPU",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": -0.75
+    },
+    {
+      "context": "landing_gear_left.transform_overrides",
+      "parm_id": "VWEGCRDCSDU",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": -0.75
+    },
+    {
+      "context": "landing_gear_left.transform_overrides",
+      "parm_id": "LEWOWQBOWIA",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 90.0
+    },
+    {
+      "context": "landing_gear_left",
+      "parm_id": "XCDYHDCAQPR",
+      "name": "Length",
+      "group": "Design",
+      "value": 0.6
+    },
+    {
+      "context": "landing_gear_left",
+      "parm_id": "TSKDASHEIRS",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 10.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "LJUKTXEZAOZ",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "NJIDHMLDCHB",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "JOKCIKXFRWB",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "ZWWKVSOZFWI",
+      "name": "X_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "WUXUWTQYCJC",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "WWQANFLZGJY",
+      "name": "Z_Rel_Rotation",
+      "group": "XForm",
+      "value": 0.0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "GREIBIYALBN",
+      "name": "Sym_Planar_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "DSGBFMWGVVR",
+      "name": "Sym_Axial_Flag",
+      "group": "Sym",
+      "value": 0
+    },
+    {
+      "context": "landing_gear_right.transform_xform",
+      "parm_id": "NECCQXTSOVP",
+      "name": "Sym_Rot_N",
+      "group": "Sym",
+      "value": 2
+    },
+    {
+      "context": "landing_gear_right.shape_tessellation",
+      "parm_id": "PQFRPOEWGNB",
+      "name": "Tess_U",
+      "group": "Shape",
+      "value": 24
+    },
+    {
+      "context": "landing_gear_right.shape_tessellation",
+      "parm_id": "ZPRGRSQMBXB",
+      "name": "Tess_W",
+      "group": "Shape",
+      "value": 17
+    },
+    {
+      "context": "landing_gear_right.transform_overrides",
+      "parm_id": "LJUKTXEZAOZ",
+      "name": "X_Rel_Location",
+      "group": "XForm",
+      "value": 3.2
+    },
+    {
+      "context": "landing_gear_right.transform_overrides",
+      "parm_id": "NJIDHMLDCHB",
+      "name": "Y_Rel_Location",
+      "group": "XForm",
+      "value": 0.75
+    },
+    {
+      "context": "landing_gear_right.transform_overrides",
+      "parm_id": "JOKCIKXFRWB",
+      "name": "Z_Rel_Location",
+      "group": "XForm",
+      "value": -0.75
+    },
+    {
+      "context": "landing_gear_right.transform_overrides",
+      "parm_id": "WUXUWTQYCJC",
+      "name": "Y_Rel_Rotation",
+      "group": "XForm",
+      "value": 90.0
+    },
+    {
+      "context": "landing_gear_right",
+      "parm_id": "QCLNTHEPIKH",
+      "name": "Length",
+      "group": "Design",
+      "value": 0.6
+    },
+    {
+      "context": "landing_gear_right",
+      "parm_id": "WZHZBGFREGI",
+      "name": "FineRatio",
+      "group": "Design",
+      "value": 10.0
+    }
+  ],
+  "artifacts": {
+    "vsp3": "/root/projects/AeroLoop/demo/out/model_1780803563466.vsp3",
+    "stl": "/root/projects/AeroLoop/demo/out/model_1780803563466.stl"
+  }
+}

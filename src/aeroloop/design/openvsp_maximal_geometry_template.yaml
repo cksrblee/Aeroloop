@@ -1,0 +1,670 @@
+# OpenVSP maximal mock template for GeometryDesignAgent
+# Purpose:
+#   - Use this as a registry-driven OpenVSP geometry template.
+#   - The agent can expose any OpenVSP option by adding raw_vsp_parms entries.
+#   - Exact Parm names/groups can vary by OpenVSP version and geometry type, so keep
+#     strict_parameter_matching=false during early development.
+#
+# Core pattern:
+#   raw_vsp_parms:
+#     - name: Length          # OpenVSP Parm name
+#       group: Design         # OpenVSP Parm group
+#       value_ref: fuselage_length_m  # request.design_parameters key
+#       default: 7.5
+#       required: true
+#
+# Supported value formats:
+#   value: 1.0                # literal value
+#   value_ref: wingspan_m     # request.design_parameters['wingspan_m']
+#   default: 1.0              # fallback if value_ref missing
+#
+# Recommended agent integration:
+#   1. load this YAML from a template registry
+#   2. merge request.design_parameters into value_ref/default fields
+#   3. AddGeom(component.geom_type)
+#   4. apply transform/common parms
+#   5. apply raw_vsp_parms
+#   6. apply xsec, airfoil, subsurface, FEA, analysis, export blocks
+
+schema_version: "openvsp-template-v1"
+template_id: "openvsp_maximal_aircraft_template_v1"
+template_name: "Maximal OpenVSP Aircraft Geometry Template"
+vehicle_type: "generic_aircraft_or_lift_cruise_vtol"
+openvsp_version_hint: "3.50.x-compatible; validate against installed API via introspection"
+units: "SI"
+
+runtime:
+  renew_workspace: true
+  update_after_each_component: true
+  update_before_export: true
+  strict_parameter_matching: false
+  fail_on_missing_required_parameter: true
+  fail_on_missing_optional_parameter: false
+  allow_raw_vsp_function_actions: true
+  validate_geom_type_available: true
+  dump_unmatched_parameters_to_manifest: true
+
+# These are engineering-level inputs that can be produced by upstream agents.
+# The actual OpenVSP parameters are bound below through value_ref.
+design_parameters:
+  aircraft_name: "candidate_aircraft"
+  fuselage_length_m: 7.5
+  fuselage_diameter_m: 1.25
+  fuselage_width_m: 1.35
+  fuselage_height_m: 1.45
+  cabin_length_m: 3.2
+  nose_length_m: 1.2
+  tailcone_length_m: 1.4
+  wingspan_m: 10.0
+  wing_area_m2: 12.0
+  root_chord_m: 1.55
+  tip_chord_m: 0.75
+  sweep_deg: 3.0
+  sweep_location: 0.25
+  dihedral_deg: 2.0
+  twist_root_deg: 0.0
+  twist_tip_deg: -2.0
+  htail_span_m: 3.2
+  htail_root_chord_m: 0.9
+  htail_tip_chord_m: 0.45
+  vtail_span_m: 1.6
+  vtail_root_chord_m: 1.0
+  vtail_tip_chord_m: 0.35
+  boom_length_m: 5.5
+  boom_diameter_m: 0.22
+  rotor_count: 4
+  rotor_diameter_m: 1.8
+  rotor_blade_count: 3
+  motor_pod_length_m: 0.65
+  motor_pod_diameter_m: 0.32
+  duct_diameter_m: 1.9
+  landing_gear_height_m: 0.6
+
+naming:
+  candidate_prefix_ref: aircraft_name
+  component_id_prefix: "GCOMP"
+  geom_name_format: "{component_name}"
+
+sets:
+  # OpenVSP has built-in sets; user sets can be mapped by the executor.
+  - name: "Lifting"
+    description: "Wing, tail, control surfaces"
+  - name: "NonLifting"
+    description: "Fuselage, pods, booms, ducts"
+  - name: "Propulsion"
+    description: "Propellers, rotors, motor pods"
+  - name: "Structure"
+    description: "FEA ribs, spars, skins"
+  - name: "Export"
+    description: "Components included in exported mesh"
+
+materials:
+  - name: "DefaultWhite"
+    ambient: [220, 220, 220]
+    diffuse: [240, 240, 240]
+    specular: [80, 80, 80]
+    emissive: [0, 0, 0]
+    alpha: 1.0
+    shininess: 30
+  - name: "GlassBlue"
+    ambient: [30, 50, 80]
+    diffuse: [80, 130, 190]
+    specular: [200, 220, 255]
+    emissive: [0, 0, 0]
+    alpha: 0.35
+    shininess: 80
+  - name: "PropDark"
+    ambient: [20, 20, 20]
+    diffuse: [35, 35, 35]
+    specular: [100, 100, 100]
+    emissive: [0, 0, 0]
+    alpha: 1.0
+    shininess: 40
+
+common_parm_blocks:
+  # Apply to most geometry types if those Parm names exist.
+  transform_xform:
+    raw_vsp_parms:
+      - {name: X_Rel_Location, group: XForm, value: 0.0, required: false}
+      - {name: Y_Rel_Location, group: XForm, value: 0.0, required: false}
+      - {name: Z_Rel_Location, group: XForm, value: 0.0, required: false}
+      - {name: X_Rel_Rotation, group: XForm, value: 0.0, required: false}
+      - {name: Y_Rel_Rotation, group: XForm, value: 0.0, required: false}
+      - {name: Z_Rel_Rotation, group: XForm, value: 0.0, required: false}
+      - {name: X_Rel_Scale, group: XForm, value: 1.0, required: false}
+      - {name: Y_Rel_Scale, group: XForm, value: 1.0, required: false}
+      - {name: Z_Rel_Scale, group: XForm, value: 1.0, required: false}
+      - {name: Sym_Planar_Flag, group: Sym, value: 0, required: false}
+      - {name: Sym_Axial_Flag, group: Sym, value: 0, required: false}
+      - {name: Sym_Rot_N, group: Sym, value: 2, required: false}
+  shape_tessellation:
+    raw_vsp_parms:
+      - {name: Tess_U, group: Shape, value: 24, required: false}
+      - {name: Tess_W, group: Shape, value: 17, required: false}
+      - {name: SectTess_U, group: Shape, value: 8, required: false}
+  attach:
+    raw_vsp_parms:
+      - {name: Trans_Attach_Flag, group: Attach, value: 0, required: false}
+      - {name: Rots_Attach_Flag, group: Attach, value: 0, required: false}
+      - {name: U_Attach_Location, group: Attach, value: 0.5, required: false}
+      - {name: V_Attach_Location, group: Attach, value: 0.5, required: false}
+      - {name: R_Attach_Location, group: Attach, value: 0.0, required: false}
+      - {name: S_Attach_Location, group: Attach, value: 0.0, required: false}
+      - {name: T_Attach_Location, group: Attach, value: 0.0, required: false}
+
+components:
+  main_fuselage:
+    enabled: true
+    role: "primary_body"
+    geom_type: "FUSELAGE"
+    parent: null
+    set_memberships: ["NonLifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    raw_vsp_parms:
+      - {name: Length, group: Design, value_ref: fuselage_length_m, default: 7.5, required: true}
+      - {name: Diameter, group: Design, value_ref: fuselage_diameter_m, default: 1.25, required: false}
+      - {name: FineRatio, group: Design, value: 6.0, required: false}
+      - {name: OrderPolicy, group: Skinning, value: 0, required: false}
+      - {name: Smooth, group: Skinning, value: 1, required: false}
+      - {name: AllSym, group: Sym, value: 0, required: false}
+    xsec_surfaces:
+      - surf_index: 0
+        xsecs:
+          - index: 0
+            shape: "XS_POINT"
+            note: "nose point"
+          - index: 1
+            shape: "XS_SUPER_ELLIPSE"
+            raw_vsp_parms:
+              - {name: XLocPercent, group: XSec, value: 0.12, required: false}
+              - {name: Width, group: XSecCurve, value_ref: fuselage_width_m, default: 1.20, required: false}
+              - {name: Height, group: XSecCurve, value_ref: fuselage_height_m, default: 1.30, required: false}
+              - {name: M, group: XSecCurve, value: 2.0, required: false}
+              - {name: N, group: XSecCurve, value: 2.0, required: false}
+          - index: 2
+            shape: "XS_ELLIPSE"
+            raw_vsp_parms:
+              - {name: XLocPercent, group: XSec, value: 0.45, required: false}
+              - {name: Width, group: XSecCurve, value_ref: fuselage_width_m, default: 1.35, required: false}
+              - {name: Height, group: XSecCurve, value_ref: fuselage_height_m, default: 1.45, required: false}
+          - index: 3
+            shape: "XS_ELLIPSE"
+            raw_vsp_parms:
+              - {name: XLocPercent, group: XSec, value: 0.78, required: false}
+              - {name: Width, group: XSecCurve, value: 0.75, required: false}
+              - {name: Height, group: XSecCurve, value: 0.85, required: false}
+          - index: 4
+            shape: "XS_POINT"
+            note: "tail point"
+    end_caps:
+      front: "POINT_END_CAP"
+      aft: "POINT_END_CAP"
+    feature_tags:
+      - {tag: "cabin", start_u: 0.18, end_u: 0.58}
+      - {tag: "tailcone", start_u: 0.70, end_u: 1.00}
+
+  main_wing:
+    enabled: true
+    role: "main_lifting_surface"
+    geom_type: "WING"
+    parent: null
+    set_memberships: ["Lifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    transform_overrides:
+      raw_vsp_parms:
+        - {name: X_Rel_Location, group: XForm, value: 2.7, required: false}
+        - {name: Z_Rel_Location, group: XForm, value: 0.15, required: false}
+        - {name: Sym_Planar_Flag, group: Sym, value: 2, required: false} # commonly XZ mirror; validate in local VSP
+    raw_vsp_parms:
+      # Some Wing Parm names are section-dependent in OpenVSP. Keep these optional.
+      - {name: Span, group: Design, value_ref: wingspan_m, default: 10.0, required: false}
+      - {name: TotalSpan, group: WingGeom, value_ref: wingspan_m, default: 10.0, required: false}
+      - {name: TotalArea, group: WingGeom, value_ref: wing_area_m2, default: 12.0, required: false}
+      - {name: Root_Chord, group: Design, value_ref: root_chord_m, default: 1.55, required: false}
+      - {name: Tip_Chord, group: Design, value_ref: tip_chord_m, default: 0.75, required: false}
+      - {name: Sweep, group: XSec_1, value_ref: sweep_deg, default: 3.0, required: false}
+      - {name: Sweep_Location, group: XSec_1, value_ref: sweep_location, default: 0.25, required: false}
+      - {name: Dihedral, group: XSec_1, value_ref: dihedral_deg, default: 2.0, required: false}
+      - {name: Twist, group: XSec_1, value_ref: twist_tip_deg, default: -2.0, required: false}
+      - {name: RotateAirfoilMatchDideralFlag, group: WingGeom, value: 1, required: false}
+    wing_sections:
+      - section_index: 1
+        driver_group: "XSec_1"
+        driver: "AR_WSECT_DRIVER"
+        raw_vsp_parms:
+          - {name: Span, group: XSec_1, value_ref: wingspan_m, default: 5.0, scale: 0.5, required: false}
+          - {name: Root_Chord, group: XSec_1, value_ref: root_chord_m, default: 1.55, required: false}
+          - {name: Tip_Chord, group: XSec_1, value_ref: tip_chord_m, default: 0.75, required: false}
+          - {name: Sweep, group: XSec_1, value_ref: sweep_deg, default: 3.0, required: false}
+          - {name: Dihedral, group: XSec_1, value_ref: dihedral_deg, default: 2.0, required: false}
+          - {name: Twist, group: XSec_1, value_ref: twist_tip_deg, default: -2.0, required: false}
+        airfoil:
+          type: "XS_FOUR_SERIES"
+          raw_vsp_parms:
+            - {name: Camber, group: XSecCurve, value: 0.02, required: false}
+            - {name: CamberLoc, group: XSecCurve, value: 0.4, required: false}
+            - {name: ThickChord, group: XSecCurve, value: 0.12, required: false}
+          file: null
+    control_surfaces:
+      - name: "left_right_aileron"
+        type: "SS_CONTROL"
+        add_to_control_group: true
+        raw_vsp_parms:
+          - {name: Start_Location, group: SS_Control, value: 0.62, required: false}
+          - {name: End_Location, group: SS_Control, value: 0.95, required: false}
+          - {name: Length_C_Start, group: SS_Control, value: 0.22, required: false}
+          - {name: Length_C_End, group: SS_Control, value: 0.24, required: false}
+          - {name: SurfType, group: SS_Control, value: 1, required: false}
+    subsurfaces:
+      - name: "wing_panel_line"
+        type: "SS_LINE_ARRAY"
+        raw_vsp_parms:
+          - {name: ConstLineType, group: SS_LineArray, value: 1, required: false}
+          - {name: Spacing, group: SS_LineArray, value: 0.20, required: false}
+    fea_structures:
+      - name: "main_wing_structure"
+        init_skin: true
+        parts:
+          - name: "front_spar"
+            type: "FEA_SPAR"
+            raw_vsp_parms:
+              - {name: RelCenterLocation, group: FeaPart, value: 0.18, required: false}
+          - name: "rear_spar"
+            type: "FEA_SPAR"
+            raw_vsp_parms:
+              - {name: RelCenterLocation, group: FeaPart, value: 0.65, required: false}
+          - name: "rib_array"
+            type: "FEA_RIB_ARRAY"
+            raw_vsp_parms:
+              - {name: NumRibs, group: FeaPart, value: 8, required: false}
+
+  horizontal_tail:
+    enabled: true
+    role: "horizontal_tail"
+    geom_type: "WING"
+    parent: null
+    set_memberships: ["Lifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    transform_overrides:
+      raw_vsp_parms:
+        - {name: X_Rel_Location, group: XForm, value: 6.4, required: false}
+        - {name: Z_Rel_Location, group: XForm, value: 0.55, required: false}
+        - {name: Sym_Planar_Flag, group: Sym, value: 2, required: false}
+    raw_vsp_parms:
+      - {name: Span, group: Design, value_ref: htail_span_m, default: 3.2, required: false}
+      - {name: Root_Chord, group: Design, value_ref: htail_root_chord_m, default: 0.9, required: false}
+      - {name: Tip_Chord, group: Design, value_ref: htail_tip_chord_m, default: 0.45, required: false}
+      - {name: Sweep, group: XSec_1, value: 8.0, required: false}
+      - {name: Dihedral, group: XSec_1, value: 0.0, required: false}
+    control_surfaces:
+      - name: "elevator"
+        type: "SS_CONTROL"
+        raw_vsp_parms:
+          - {name: Start_Location, group: SS_Control, value: 0.10, required: false}
+          - {name: End_Location, group: SS_Control, value: 0.90, required: false}
+          - {name: Length_C_Start, group: SS_Control, value: 0.28, required: false}
+          - {name: Length_C_End, group: SS_Control, value: 0.28, required: false}
+
+  vertical_tail:
+    enabled: true
+    role: "vertical_tail"
+    geom_type: "WING"
+    parent: null
+    set_memberships: ["Lifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    transform_overrides:
+      raw_vsp_parms:
+        - {name: X_Rel_Location, group: XForm, value: 6.15, required: false}
+        - {name: Z_Rel_Location, group: XForm, value: 0.55, required: false}
+        - {name: X_Rel_Rotation, group: XForm, value: 90.0, required: false}
+    raw_vsp_parms:
+      - {name: Span, group: Design, value_ref: vtail_span_m, default: 1.6, required: false}
+      - {name: Root_Chord, group: Design, value_ref: vtail_root_chord_m, default: 1.0, required: false}
+      - {name: Tip_Chord, group: Design, value_ref: vtail_tip_chord_m, default: 0.35, required: false}
+      - {name: Sweep, group: XSec_1, value: 22.0, required: false}
+    control_surfaces:
+      - name: "rudder"
+        type: "SS_CONTROL"
+        raw_vsp_parms:
+          - {name: Start_Location, group: SS_Control, value: 0.15, required: false}
+          - {name: End_Location, group: SS_Control, value: 0.92, required: false}
+          - {name: Length_C_Start, group: SS_Control, value: 0.30, required: false}
+          - {name: Length_C_End, group: SS_Control, value: 0.30, required: false}
+
+  left_boom:
+    enabled: true
+    role: "tail_boom"
+    geom_type: "POD"
+    parent: null
+    mirror_component: "right_boom"
+    set_memberships: ["NonLifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    transform_overrides:
+      raw_vsp_parms:
+        - {name: X_Rel_Location, group: XForm, value: 2.2, required: false}
+        - {name: Y_Rel_Location, group: XForm, value: -1.8, required: false}
+        - {name: Z_Rel_Location, group: XForm, value: 0.05, required: false}
+    raw_vsp_parms:
+      - {name: Length, group: Design, value_ref: boom_length_m, default: 5.5, required: false}
+      - {name: Diameter, group: Design, value_ref: boom_diameter_m, default: 0.22, required: false}
+      - {name: FineRatio, group: Design, value: 20.0, required: false}
+
+  right_boom:
+    enabled: true
+    role: "tail_boom"
+    geom_type: "POD"
+    parent: null
+    set_memberships: ["NonLifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    transform_overrides:
+      raw_vsp_parms:
+        - {name: X_Rel_Location, group: XForm, value: 2.2, required: false}
+        - {name: Y_Rel_Location, group: XForm, value: 1.8, required: false}
+        - {name: Z_Rel_Location, group: XForm, value: 0.05, required: false}
+    raw_vsp_parms:
+      - {name: Length, group: Design, value_ref: boom_length_m, default: 5.5, required: false}
+      - {name: Diameter, group: Design, value_ref: boom_diameter_m, default: 0.22, required: false}
+      - {name: FineRatio, group: Design, value: 20.0, required: false}
+
+  lift_rotor_template:
+    enabled: true
+    role: "rotor_or_propulsor"
+    geom_type: "PROP"
+    instantiate_as_array: true
+    array_instances:
+      - {name: front_left_rotor,  x: 2.2, y: -3.2, z: 0.65, rotation_z: 0.0}
+      - {name: front_right_rotor, x: 2.2, y: 3.2,  z: 0.65, rotation_z: 0.0}
+      - {name: rear_left_rotor,   x: 5.7, y: -3.2, z: 0.65, rotation_z: 0.0}
+      - {name: rear_right_rotor,  x: 5.7, y: 3.2,  z: 0.65, rotation_z: 0.0}
+    set_memberships: ["Propulsion", "Export"]
+    material: "PropDark"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    raw_vsp_parms:
+      - {name: Diameter, group: Design, value_ref: rotor_diameter_m, default: 1.8, required: false}
+      - {name: NumBlade, group: Design, value_ref: rotor_blade_count, default: 3, required: false}
+      - {name: BladeNum, group: Design, value_ref: rotor_blade_count, default: 3, required: false}
+      - {name: Beta34, group: Design, value: 20.0, required: false}
+      - {name: Feather, group: Design, value: 0.0, required: false}
+      - {name: ReverseFlag, group: Design, value: 0, required: false}
+    blade_sections:
+      - index: 0
+        raw_vsp_parms:
+          - {name: Chord, group: Prop_0, value: 0.12, required: false}
+          - {name: Twist, group: Prop_0, value: 25.0, required: false}
+          - {name: Rake, group: Prop_0, value: 0.0, required: false}
+          - {name: Skew, group: Prop_0, value: 0.0, required: false}
+
+  motor_pod_template:
+    enabled: true
+    role: "motor_pod"
+    geom_type: "POD"
+    instantiate_as_array: true
+    array_instances:
+      - {name: front_left_motor_pod,  x: 2.2, y: -3.2, z: 0.45}
+      - {name: front_right_motor_pod, x: 2.2, y: 3.2,  z: 0.45}
+      - {name: rear_left_motor_pod,   x: 5.7, y: -3.2, z: 0.45}
+      - {name: rear_right_motor_pod,  x: 5.7, y: 3.2,  z: 0.45}
+    set_memberships: ["Propulsion", "NonLifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    raw_vsp_parms:
+      - {name: Length, group: Design, value_ref: motor_pod_length_m, default: 0.65, required: false}
+      - {name: Diameter, group: Design, value_ref: motor_pod_diameter_m, default: 0.32, required: false}
+      - {name: FineRatio, group: Design, value: 2.0, required: false}
+
+  optional_duct_template:
+    enabled: false
+    role: "ducted_fan_shroud"
+    geom_type: "DUCT"
+    instantiate_as_array: true
+    array_instances:
+      - {name: front_left_duct,  x: 2.2, y: -3.2, z: 0.65}
+      - {name: front_right_duct, x: 2.2, y: 3.2,  z: 0.65}
+      - {name: rear_left_duct,   x: 5.7, y: -3.2, z: 0.65}
+      - {name: rear_right_duct,  x: 5.7, y: 3.2,  z: 0.65}
+    set_memberships: ["Propulsion", "NonLifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    raw_vsp_parms:
+      - {name: Diameter, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
+      - {name: Length, group: Design, value: 0.25, required: false}
+      - {name: Inlet_Dia, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
+      - {name: Exit_Dia, group: Design, value_ref: duct_diameter_m, default: 1.9, required: false}
+
+  landing_gear_left:
+    enabled: true
+    role: "landing_gear"
+    geom_type: "POD"
+    parent: null
+    set_memberships: ["NonLifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    transform_overrides:
+      raw_vsp_parms:
+        - {name: X_Rel_Location, group: XForm, value: 3.2, required: false}
+        - {name: Y_Rel_Location, group: XForm, value: -0.75, required: false}
+        - {name: Z_Rel_Location, group: XForm, value: -0.75, required: false}
+        - {name: Y_Rel_Rotation, group: XForm, value: 90.0, required: false}
+    raw_vsp_parms:
+      - {name: Length, group: Design, value_ref: landing_gear_height_m, default: 0.6, required: false}
+      - {name: Diameter, group: Design, value: 0.06, required: false}
+      - {name: FineRatio, group: Design, value: 10.0, required: false}
+
+  landing_gear_right:
+    enabled: true
+    role: "landing_gear"
+    geom_type: "POD"
+    parent: null
+    set_memberships: ["NonLifting", "Export"]
+    material: "DefaultWhite"
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    transform_overrides:
+      raw_vsp_parms:
+        - {name: X_Rel_Location, group: XForm, value: 3.2, required: false}
+        - {name: Y_Rel_Location, group: XForm, value: 0.75, required: false}
+        - {name: Z_Rel_Location, group: XForm, value: -0.75, required: false}
+        - {name: Y_Rel_Rotation, group: XForm, value: 90.0, required: false}
+    raw_vsp_parms:
+      - {name: Length, group: Design, value_ref: landing_gear_height_m, default: 0.6, required: false}
+      - {name: Diameter, group: Design, value: 0.06, required: false}
+      - {name: FineRatio, group: Design, value: 10.0, required: false}
+
+  # Generic OpenVSP geometry slots. Enable and add raw_vsp_parms as needed.
+  optional_stack_component:
+    enabled: false
+    role: "generic_stack_body"
+    geom_type: "STACK"
+    set_memberships: ["NonLifting"]
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    xsec_surfaces:
+      - surf_index: 0
+        xsecs:
+          - {index: 0, shape: "XS_POINT"}
+          - {index: 1, shape: "XS_CIRCLE", raw_vsp_parms: [{name: Circle_Diameter, group: XSecCurve, value: 1.0, required: false}]}
+          - {index: 2, shape: "XS_ROUNDED_RECTANGLE", raw_vsp_parms: [{name: Width, group: XSecCurve, value: 1.2, required: false}, {name: Height, group: XSecCurve, value: 0.8, required: false}]}
+          - {index: 3, shape: "XS_POINT"}
+
+  optional_body_of_revolution:
+    enabled: false
+    role: "body_of_revolution"
+    geom_type: "BOR"
+    set_memberships: ["NonLifting"]
+    apply_common_blocks: ["transform_xform", "shape_tessellation"]
+    raw_vsp_parms:
+      - {name: Mode, group: Design, value_enum: "BOR_FLOWTHROUGH", required: false}
+      - {name: Diameter, group: Design, value: 1.0, required: false}
+      - {name: Length, group: Design, value: 2.0, required: false}
+
+  optional_conformal_component:
+    enabled: false
+    role: "conformal_geometry"
+    geom_type: "CONFORMAL"
+    parent: "main_fuselage"
+    set_memberships: ["NonLifting"]
+    apply_common_blocks: ["transform_xform", "shape_tessellation", "attach"]
+    raw_vsp_parms:
+      - {name: UTrimMin, group: Conformal, value: 0.0, required: false}
+      - {name: UTrimMax, group: Conformal, value: 1.0, required: false}
+      - {name: WTrimMin, group: Conformal, value: 0.0, required: false}
+      - {name: WTrimMax, group: Conformal, value: 1.0, required: false}
+
+  optional_human_reference:
+    enabled: false
+    role: "human_scale_reference"
+    geom_type: "HUMAN"
+    set_memberships: ["NonLifting"]
+    apply_common_blocks: ["transform_xform"]
+    raw_vsp_parms:
+      - {name: Height, group: Design, value: 1.75, required: false}
+      - {name: Pose, group: Design, value: 0, required: false}
+
+  optional_mesh_import:
+    enabled: false
+    role: "imported_mesh_reference"
+    geom_type: "MESH"
+    file_path: null
+    set_memberships: ["NonLifting"]
+    apply_common_blocks: ["transform_xform"]
+    raw_vsp_parms: []
+
+  optional_point_cloud:
+    enabled: false
+    role: "point_cloud_reference"
+    geom_type: "PT_CLOUD"
+    file_path: null
+    set_memberships: ["NonLifting"]
+    apply_common_blocks: ["transform_xform"]
+    raw_vsp_parms: []
+
+# Global actions are for options that do not fit cleanly into component raw_vsp_parms.
+# The executor should whitelist function names before using this block.
+raw_vsp_actions:
+  - enabled: false
+    name: "SetComputationFileName"
+    args: ["COMP_GEOM_TXT_TYPE", "comp_geom.txt"]
+  - enabled: false
+    name: "SetVSPAERORefWingID"
+    args_from_component: "main_wing"
+
+analysis_options:
+  geometry_analysis:
+    enabled: false
+    cases:
+      - name: "wetted_area_projected_area_mass"
+        raw_inputs:
+          - {name: "AnalysisMethod", value: "default"}
+  comp_geom:
+    enabled: true
+    set: "Export"
+    half_mesh: false
+    use_mode: "surface_intersection_and_trimming"
+    output_txt: true
+    output_csv: true
+  mass_properties:
+    enabled: true
+    set: "Export"
+    density_assumption: "component_metadata_or_default"
+  projected_area:
+    enabled: true
+    set: "Export"
+    directions: ["x", "y", "z"]
+  degen_geom:
+    enabled: true
+    set: "Export"
+    output_csv: true
+  cfd_mesh:
+    enabled: false
+    set: "Export"
+    farfield_enabled: false
+    mesh_growth_ratio: 1.2
+    min_edge_len: 0.02
+    max_edge_len: 0.50
+    num_circle_segments: 24
+    half_mesh: false
+  fea_mesh:
+    enabled: false
+    set: "Structure"
+    output_format: "NASTRAN"
+  parasite_drag:
+    enabled: false
+    freestream:
+      mach: 0.15
+      altitude_m: 300.0
+      reynolds_length_m: 1.0
+    friction_equation: "CF_TURB_EXPLICIT_FIT_SPALDING"
+  vspaero:
+    enabled: false
+    reference_component: "main_wing"
+    analysis_method: "VORTEX_LATTICE"
+    alpha_start_deg: -5.0
+    alpha_end_deg: 15.0
+    alpha_npts: 9
+    beta_deg: 0.0
+    mach: 0.15
+    cref_ref: "root_chord_m"
+    bref_ref: "wingspan_m"
+    sref_ref: "wing_area_m2"
+
+export_options:
+  write_vsp3: true
+  export_set: "Export"
+  formats:
+    stl:
+      enabled: true
+      file_suffix: ".stl"
+      export_constant: "EXPORT_STL"
+    obj:
+      enabled: false
+      file_suffix: ".obj"
+      export_constant: "EXPORT_OBJ"
+    step:
+      enabled: false
+      file_suffix: ".step"
+      export_constant: "EXPORT_STEP"
+    iges:
+      enabled: false
+      file_suffix: ".igs"
+      export_constant: "EXPORT_IGES"
+    cart3d_tri:
+      enabled: false
+      file_suffix: ".tri"
+      export_constant: "EXPORT_CART3D"
+    plot3d:
+      enabled: false
+      file_suffix: ".p3d"
+      export_constant: "EXPORT_PLOT3D"
+    svg:
+      enabled: false
+      file_suffix: ".svg"
+      export_constant: "EXPORT_SVG"
+    dxf:
+      enabled: false
+      file_suffix: ".dxf"
+      export_constant: "EXPORT_DXF"
+    x3d:
+      enabled: false
+      file_suffix: ".x3d"
+      export_constant: "EXPORT_X3D"
+
+validation_options:
+  validate_openvsp_available: true
+  validate_geom_types: true
+  validate_required_parameters: true
+  validate_mesh_after_export: true
+  strict_watertight: false
+  bbox_reasonableness_check: true
+  min_file_size_bytes: 1000
+
+traceability:
+  include_parameter_sources: true
+  include_component_parameter_map: true
+  include_unmatched_vsp_parms: true
+  include_ccl_moc_links: true
+  default_moc_type: "analysis"
+  evidence_role: "candidate_design_evidence"

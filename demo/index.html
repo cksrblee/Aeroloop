@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroLoop Chat-to-Geometry Demo</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.7);
+            --chat-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+
+        /* Left Panel - Chat */
+        #chat-panel {
+            width: 350px;
+            min-width: 350px;
+            height: 100%;
+            background: var(--chat-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .chat-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+        }
+
+        .chat-history {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 90%;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .message.bot {
+            background: rgba(255,255,255,0.05);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user {
+            background: var(--accent);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input-container {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: white;
+            font-family: inherit;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .send-btn {
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 0 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Right Panel - Viewer */
+        #viewer-panel {
+            flex: 1;
+            position: relative;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+
+        .controls-panel {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            bottom: 1rem;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            width: 320px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .controls-panel h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+        }
+
+        #params-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) transparent;
+        }
+        
+        #params-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        #params-container::-webkit-scrollbar-thumb {
+            background-color: var(--accent);
+            border-radius: 3px;
+        }
+
+        .param-group {
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .param-group-header {
+            background: rgba(255,255,255,0.05);
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .param-group-header:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .param-group-content {
+            padding: 1rem;
+            display: none;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .param-group.active .param-group-content {
+            display: block;
+        }
+        
+        .param-group.active .param-group-header::after {
+            content: "▼";
+            font-size: 0.8rem;
+        }
+        .param-group-header::after {
+            content: "▶";
+            font-size: 0.8rem;
+        }
+
+        .slider-row {
+            margin-bottom: 1rem;
+        }
+        
+        .slider-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-muted);
+        }
+
+        .slider-value {
+            color: var(--accent-hover);
+            font-weight: 600;
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        
+        input[type=text].param-text {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="chat-panel">
+        <div class="chat-header">
+            <div class="logo-icon">AL</div>
+            <h2>Geometry Agent</h2>
+        </div>
+        <div class="chat-history" id="chat-history">
+            <div class="message bot">
+                안녕하세요! 저는 AeroLoop의 GeometryDesignAgent입니다. 어떤 형상을 만들어 드릴까요?<br><br>
+                💡 <b>사용 가능한 템플릿:</b> 비행기, 드론<br>
+                💡 <b>조절 가능 파라미터:</b> 스팬(span), 후퇴각(sweep), 루트/팁 코드(root/tip chord), 프로펠러 반경, 날개 위치(x, z)<br>
+                💡 <b>해석 기능:</b> "부피 해석해줘" 라고 하시면 즉시 질량/면적 특성을 계산합니다.<br><br>
+                (예: "드론으로 바꿔줘", "날개 x 위치를 5로 옮겨줘")
+            </div>
+        </div>
+        <form class="chat-input-container" id="chat-form">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Type a command..." autocomplete="off">
+            <button type="submit" class="send-btn">Send</button>
+        </form>
+    </div>
+
+    <div id="viewer-panel">
+        <div id="loading" class="loading-overlay">
+            <div class="spinner"></div>
+            <h2>Generating Geometry...</h2>
+        </div>
+        <div id="canvas-container"></div>
+        <div class="controls-panel">
+            <h2>Geometry Parameters</h2>
+            <div id="params-container">
+                <!-- Dynamically populated accordion groups -->
+            </div>
+            
+            <h2 style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem; flex-shrink: 0;">Analysis Results</h2>
+            <div id="analysis-list" style="flex-shrink: 0; font-size: 0.875rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="color: var(--text-muted);">해석 명령을 내려주세요. (예: "해석해줘")</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Three.js Setup ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(20, 20, 20);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+
+        // Lighting
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        let currentMesh = null;
+        const loader = new STLLoader();
+
+        function loadSTL(url) {
+            document.getElementById('loading').classList.add('active');
+            loader.load(url, function (geometry) {
+                if (currentMesh) {
+                    scene.remove(currentMesh);
+                    currentMesh.geometry.dispose();
+                    currentMesh.material.dispose();
+                }
+
+                const material = new THREE.MeshPhysicalMaterial({
+                    color: 0xe2e8f0, metalness: 0.5, roughness: 0.4, clearcoat: 0.8
+                });
+
+                currentMesh = new THREE.Mesh(geometry, material);
+    // OpenVSP exports with X-forward, Z-up. Three.js uses Y-up.
+                // Rotate -90 degrees on X axis
+                currentMesh.rotation.x = -Math.PI / 2;
+                
+                geometry.computeBoundingBox();
+                const center = new THREE.Vector3();
+                geometry.boundingBox.getCenter(center);
+                currentMesh.position.sub(center);
+                
+                const size = new THREE.Vector3();
+                geometry.boundingBox.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z);
+                currentMesh.scale.setScalar(20 / maxDim);
+
+                scene.add(currentMesh);
+                document.getElementById('loading').classList.remove('active');
+            });
+        }
+
+        // --- Chat & Params Logic ---
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatHistory = document.getElementById('chat-history');
+        const paramsContainer = document.getElementById('params-container');
+        
+        let globalParams = {};
+        let updateTimeout = null;
+
+        function appendMessage(text, sender) {
+            const msg = document.createElement('div');
+            msg.className = `message ${sender}`;
+            msg.innerHTML = text.replace(/\n/g, '<br>');
+            chatHistory.appendChild(msg);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+        
+        function categorizeParam(key) {
+            const k = key.toLowerCase();
+            if (k.includes('fuse') || k.includes('cabin') || k.includes('nose') || k.includes('tailcone')) return 'Fuselage';
+            if (k.includes('wing') || k.includes('chord') || k.includes('sweep') || k.includes('dihedral') || k.includes('twist')) return 'Wing';
+            if (k.includes('htail') || k.includes('vtail')) return 'Tail';
+            if (k.includes('rotor') || k.includes('prop') || k.includes('motor') || k.includes('duct')) return 'Propulsion';
+            if (k.includes('boom') || k.includes('gear')) return 'Misc';
+            return 'General';
+        }
+
+        function renderParams(params) {
+            globalParams = {...params};
+            const groups = {};
+            
+            for (const [key, value] of Object.entries(params)) {
+                if (key === 'aircraft_name') continue;
+                const cat = categorizeParam(key);
+                if (!groups[cat]) groups[cat] = {};
+                groups[cat][key] = value;
+            }
+            
+            paramsContainer.innerHTML = '';
+            
+            for (const [groupName, groupParams] of Object.entries(groups)) {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'param-group';
+                
+                const header = document.createElement('div');
+                header.className = 'param-group-header';
+                header.innerText = groupName;
+                header.onclick = () => groupDiv.classList.toggle('active');
+                
+                const content = document.createElement('div');
+                content.className = 'param-group-content';
+                
+                for (const [key, value] of Object.entries(groupParams)) {
+                    const row = document.createElement('div');
+                    row.className = 'slider-row';
+                    
+                    if (typeof value === 'number') {
+                        // Determine min/max/step heuristically
+                        let min = 0;
+                        let max = 100;
+                        let step = 0.1;
+                        if (key.includes('deg')) { min = -45; max = 45; step = 1; }
+                        else if (key.includes('count')) { min = 1; max = 10; step = 1; }
+                        else if (value < 5) { min = 0; max = 10; step = 0.05; }
+                        else if (value < 20) { min = 0; max = 50; step = 0.5; }
+                        
+                        row.innerHTML = `
+                            <div class="slider-label">
+                                <span>${key}</span>
+                                <span class="slider-value" id="val-${key}">${value.toFixed(2)}</span>
+                            </div>
+                            <input type="range" id="input-${key}" min="${min}" max="${max}" step="${step}" value="${value}">
+                        `;
+                    } else {
+                        row.innerHTML = `
+                            <div class="slider-label"><span>${key}</span></div>
+                            <input type="text" id="input-${key}" class="param-text" value="${value}">
+                        `;
+                    }
+                    content.appendChild(row);
+                }
+                
+                groupDiv.appendChild(header);
+                groupDiv.appendChild(content);
+                paramsContainer.appendChild(groupDiv);
+                
+                // Add event listeners
+                for (const key of Object.keys(groupParams)) {
+                    const input = document.getElementById(`input-${key}`);
+                    if (input) {
+                        input.addEventListener('input', (e) => {
+                            const val = typeof groupParams[key] === 'number' ? parseFloat(e.target.value) : e.target.value;
+                            if (document.getElementById(`val-${key}`)) {
+                                document.getElementById(`val-${key}`).innerText = typeof val === 'number' ? val.toFixed(2) : val;
+                            }
+                            globalParams[key] = val;
+                            debounceParamUpdate();
+                        });
+                    }
+                }
+            }
+        }
+        
+        function debounceParamUpdate() {
+            if (updateTimeout) clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+                sendParamUpdate();
+            }, 600); // Wait 600ms after last slider move before sending to backend
+        }
+        
+        async function sendParamUpdate() {
+            document.getElementById('loading').classList.add('active');
+            try {
+                const res = await fetch('/api/parameters', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ parameters: globalParams })
+                });
+                const data = await res.json();
+                loadSTL(data.stl_url);
+            } catch (err) {
+                console.error("Param update error", err);
+                document.getElementById('loading').classList.remove('active');
+            }
+        }
+
+        function updateAnalysis(analysis) {
+            const analysisList = document.getElementById('analysis-list');
+            if (!analysis) return;
+            
+            analysisList.innerHTML = '';
+            for (const [key, value] of Object.entries(analysis)) {
+                analysisList.innerHTML += `
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.25rem;">
+                        <span>${key}</span>
+                        <span style="color: #10b981; font-weight: 600;">${value}</span>
+                    </div>
+                `;
+            }
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if(!text) return;
+            
+            appendMessage(text, 'user');
+            chatInput.value = '';
+            document.getElementById('loading').classList.add('active');
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await res.json();
+                
+                appendMessage(data.reply, 'bot');
+                renderParams(data.parameters);
+                if(data.analysis) {
+                    updateAnalysis(data.analysis);
+                }
+                loadSTL(data.stl_url);
+
+            } catch (err) {
+                appendMessage('서버와 통신 중 오류가 발생했습니다.', 'bot');
+                document.getElementById('loading').classList.remove('active');
+            }
+        });
+
+        // Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Initial Load
+        fetch('/api/parameters').then(r => r.json()).then(data => {
+            renderParams(data.parameters);
+        });
+        
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: "init" })
+        }).then(r => r.json()).then(data => {
+            renderParams(data.parameters);
+            loadSTL(data.stl_url);
+        });
+
+    </script>
+</body>
+</html>

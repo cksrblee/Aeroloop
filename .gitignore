@@ -5,3 +5,10 @@ __pycache__/
 .agents/
 
 data/
+
+*.deb
+*.sh
+thirdparty/
+*.vsp3
+*.stl
+*.png
