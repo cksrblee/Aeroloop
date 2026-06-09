@@ -116,8 +116,15 @@ class RequirementReasoningAgent(BaseAIAgent):
                     print(f"Warning: Failed to parse assumption: {e}")
                     
             conflicts = []
+            valid_conflict_types = ["hard_vs_hard", "hard_vs_soft", "soft_vs_soft", "threshold_conflict", "objective_conflict", "missing_information"]
+            valid_resolutions = ["safety_over_efficiency", "certification_over_customer_preference", "use_stricter_threshold", "convert_to_soft_objective", "requires_user_clarification", "manual_review_required"]
+            
             for c in response_json.get("conflicts_detected", []):
                 try:
+                    if c.get("conflict_type") not in valid_conflict_types:
+                        c["conflict_type"] = "missing_information"
+                    if c.get("resolution_strategy") not in valid_resolutions:
+                        c["resolution_strategy"] = "requires_user_clarification"
                     conflicts.append(RequirementConflict(**c))
                 except Exception as e:
                     print(f"Warning: Failed to parse conflict: {e}")
