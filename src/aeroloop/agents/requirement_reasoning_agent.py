@@ -99,12 +99,30 @@ class RequirementReasoningAgent(BaseAIAgent):
                     
                 final_reqs.append(FinalRequirement(**r))
                 
-            resolved = [ResolvedAssumption(**a) for a in response_json.get("resolved_assumptions", [])]
-            conflicts = [RequirementConflict(**c) for c in response_json.get("conflicts_detected", [])]
+            resolved = []
+            for a in response_json.get("resolved_assumptions", []):
+                try:
+                    resolved.append(ResolvedAssumption(**a))
+                except Exception as e:
+                    print(f"Warning: Failed to parse assumption: {e}")
+                    
+            conflicts = []
+            for c in response_json.get("conflicts_detected", []):
+                try:
+                    conflicts.append(RequirementConflict(**c))
+                except Exception as e:
+                    print(f"Warning: Failed to parse conflict: {e}")
+                    
             rem_q = response_json.get("remaining_unresolved_questions", [])
+            
             from aeroloop.schemas.aircraft import ConceptBaseline
             cb_data = response_json.get("concept_baseline")
-            concept_baseline = ConceptBaseline(**cb_data) if cb_data else None
+            concept_baseline = None
+            if cb_data:
+                try:
+                    concept_baseline = ConceptBaseline(**cb_data)
+                except Exception as e:
+                    print(f"Warning: Failed to parse concept_baseline: {e}")
 
             status = "success"
             if rem_q:
@@ -227,7 +245,16 @@ Format your response STRICTLY as a JSON object matching this structure:
     }}
   ],
   "remaining_unresolved_questions": [],
-  "conflicts_detected": []
+  "conflicts_detected": [
+    {{
+      "conflict_id": "CONF-001",
+      "conflict_type": "missing_information",
+      "involved_candidate_ids": ["CAND-CUST-PAYLOAD-MISSING-F7EA8BC5"],
+      "description": "Payload is unspecified.",
+      "severity": "medium",
+      "resolution_strategy": "requires_user_clarification"
+    }}
+  ]
 }}
 """
 
