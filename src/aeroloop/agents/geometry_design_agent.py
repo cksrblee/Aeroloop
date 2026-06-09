@@ -106,6 +106,21 @@ class GeometryDesignAgent(BaseAIAgent):
             for w in report.warnings:
                 warnings.append(f"Template Warning: {w}")
 
+            # Populate generated_components dynamically from the template report
+            for comp_name, geom_id in report.geom_ids.items():
+                comp_params = {}
+                for p in report.applied_parms:
+                    # Match any parameter applied within this component's context
+                    if p.get("context", "").startswith(comp_name):
+                        comp_params[p["name"]] = p["value"]
+                
+                generated_components.append(GeometryComponent(
+                    component_id=str(geom_id),
+                    component_type="OpenVSP_Geom",
+                    name=comp_name,
+                    parameters=comp_params
+                ))
+
             exported = export_from_template(
                 vsp=vsp,
                 template=template,
@@ -118,7 +133,7 @@ class GeometryDesignAgent(BaseAIAgent):
             artifacts.stl_file_path = exported.get("stl")
             artifacts.geometry_manifest_path = exported.get("template_manifest")
             
-            log_messages.append("Exported geometry from template.")
+            log_messages.append("Exported geometry from template and populated dynamic components.")
                 
         except Exception as e:
             return self._fail(request, "VSP_EXECUTION_ERROR", f"OpenVSP failed: {str(e)}", recoverable=False)
@@ -183,12 +198,6 @@ class GeometryDesignAgent(BaseAIAgent):
             if isinstance(v, (int, float)) and v < 0:
                 if not k.endswith("_deg") and "x" not in k and "y" not in k and "z" not in k:
                     errors.append(ErrorInfo(error_code="INVALID_DIMENSION", message=f"{k} must be >= 0.", field=f"design_parameters.{k}"))
-        
-        # Example default mapping logic based on template
-        if request.geometry_template == "lift_cruise_vtol_template_v1" or request.vehicle_type == "lift_cruise_vtol":
-            if "tip_chord_m" not in params and "root_chord_m" in params:
-                params["tip_chord_m"] = params["root_chord_m"] * 0.5
-                warnings.append("tip_chord_m missing. Applied template default (0.5 * root_chord_m).")
         
         return params, warnings, errors
 

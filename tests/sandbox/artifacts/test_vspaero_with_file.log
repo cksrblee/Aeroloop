@@ -1,0 +1,96 @@
+WARNING 7: VSPAERO Viewer Not Found. 
+	Expected here: /root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp/openvsp/vspviewer
+ERROR 7: Could not open History file: /root/projects/AeroLoop/test_geom.history
+	File: /root/projects/AeroLoop/thirdparty/OpenVSP/src/geom_core/VSPAEROMgr.cpp 	Line:2303
+ERROR 7: Could not open Polar file: /root/projects/AeroLoop/test_geom.polar
+	File: /root/projects/AeroLoop/thirdparty/OpenVSP/src/geom_core/VSPAEROMgr.cpp 	Line:2578
+ERROR 7: Could not open Load file: /root/projects/AeroLoop/test_geom.lod
+	File: /root/projects/AeroLoop/thirdparty/OpenVSP/src/geom_core/VSPAEROMgr.cpp 	Line:2890
+
+Error: Aerothermal database (*.adb) file not found. Execute VSPAERO before running the CpSlicer
+/root/anaconda3/envs/aero/bin/vspaero -omp 4 /root/projects/AeroLoop/test_geom
+Setting Sref to: 100.000000 
+Setting Cref to: 1.000000 
+Setting Bref to: 1.000000 
+Setting X_cg to: 0.000000 
+Setting Y_cg to: 0.000000 
+Setting Z_cg to: 0.000000 
+Number of Machs: 1 
+Mach: 0.000000 
+Number of AoAs: 1 
+AoA: 0.000000 
+Number of Betas: 1 
+Beta: 0.000000 
+Number of ReCs: 1 
+ReC: 10000000.000000 
+Setting Vinf to: 100.000000 
+Setting Rho to: 0.002377 
+Setting StallModel to: 0 
+Setting Clo2D to: 0.000000 
+Setting CLMax2D to: 1.000000 
+Setting Symmetry to: 0 
+Setting FreezeMultiPoleAtIteration to: 10000 
+Setting FreezeWakeAtIteration to: 10000 
+Setting FreezeWakeRootVortices to: 0 
+Setting ImplicitWake to: 0 
+Setting ImplicitWakeStartIteration_ to: 0 
+Setting FarDist to: -1.000000 
+Setting NumWakeNodes to: 8 
+Setting WakeIters to: 5 
+Setting WakeRelax to: 1.000000 
+Setting ForwardGMRESConvergenceFactor to: 1.000000e+00 
+Setting AdjointGMRESConvergenceFactor_ to: 1.000000e+00 
+Setting NonLinearConvergenceFactor to: 1.000000e+00 
+Setting CoreSizeFactor to: 1.000000 
+Setting multipole FarAway factor to: 5.000000 
+Setting UpdateMatrixPreconditioner flag to: 0 
+Setting UseWakeNodeMatrixPreconditioner flag to: 0 
+Setting QuadTreeBufferLevels_ flag to: 0 
+Number of NumberOfAdjointForceAndMomentCases_: 0 
+Number of NumberOfAdjointComponentListSettings_: 0 
+Setting Write2DFEMFile to: 0 
+Setting WriteTecplotFile to: 0 
+Sref            = 100.000000 
+Cref            = 1.000000 
+Bref            = 1.000000 
+X_cg            = 0.000000 
+Y_cg            = 0.000000 
+Z_cg            = 0.000000 
+Mach            = 0.000000 
+AoA             = 0.000000 
+Beta            = 0.000000 
+Vinf            = 100.000000 
+Vref            = 100.000000 
+Rho             = 0.002377 
+ReCref          = 10000000.000000 
+StallModel      = 0  
+Clo2D           = 0.000000 
+CLMax2D_        = 1.000000 
+Symmetry        = 0  
+FarDist         = -1.000000 
+NumWakeNodes    = 8  
+WakeIters       = 5  
+NumberOfControlGroups = 0 
+NumberofSurveyPoints: 0 
+NumberOfQuadTrees: 1 
+QuadTree(1):          2:    0.00000 
+NumberOfInlets: 0 
+NumberOfNozzles: 0 
+NumberOfInlets: 0 
+NumberOfNozzles: 0 
+VSPAERO v.7.2.2 --- Compiled on: Jun  7 2026 at 11:30:14 PST 
+
+
+
+
+Initializing OPENMP for 4 threads 
+NumberOfThreads_: 4 
+_OPENMP Version string: 201511
+Could not load /root/projects/AeroLoop/test_geom OpenVSP VSPGEOM file, or CART3D Tri file... nDone
+Traceback (most recent call last):
+  File "/root/projects/AeroLoop/test_vspaero_with_file.py", line 13, in <module>
+    vsp.ExecAnalysis("VSPAEROSweep")
+  File "/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp/openvsp/vsp.py", line 2413, in ExecAnalysis
+    return _vsp.ExecAnalysis(analysis)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

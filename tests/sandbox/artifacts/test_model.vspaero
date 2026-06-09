@@ -1,0 +1,16 @@
+Sref = 100.0
+Cref = 1.0
+Bref = 1.0
+X_cg = 0.0
+Y_cg = 0.0
+Z_cg = 0.0
+Mach = 0.0
+AoA = 5.0
+Beta = 0.0
+Vinf = 100.0
+Rho = 0.002377
+ReCref = 10000000.0
+Symmetry = 0
+FarDist = -1.0
+NumWakeNodes = 8
+WakeIters = 0
