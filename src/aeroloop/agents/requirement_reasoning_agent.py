@@ -181,9 +181,8 @@ Instructions:
 4. synthesize the `final_requirements` into a high-level `concept_baseline` which acts as the SizingDraft for the SizingAgent. Physics-derived fields like mtow_kg and wing_area_m2 should be left blank as they will be calculated downstream.
 
 CRITICAL INSTRUCTION:
-You must almost ALWAYS automatically resolve unresolved_questions using your internal domain knowledge (eVTOL, Aerospace, etc.) and bold assumptions. DO NOT be passive.
-Put your guessed values in `resolved_assumptions`. 
-ONLY if a question is fundamentally contradictory or mathematically impossible to guess should you put it in `remaining_unresolved_questions`. In 99% of cases, `remaining_unresolved_questions` MUST BE EMPTY [].
+Try to automatically resolve unresolved_questions using your internal domain knowledge (eVTOL, Aerospace, etc.) and reasonable baseline assumptions. Put your guessed values in `resolved_assumptions`.
+However, if a question involves highly specific preferences, safety-critical thresholds that lack standard defaults, or impossible constraints, you should NOT guess. Instead, put those specific questions in `remaining_unresolved_questions` so the human expert can review them.
 
 Format your response STRICTLY as a JSON object matching this structure:
 {{
