@@ -105,6 +105,11 @@ class RequirementReasoningAgent(BaseAIAgent):
                         r["operator"] = "=="
                     else:
                         r["operator"] = None
+                        
+                # Validation fallback for threshold (lists are not allowed in schema)
+                thresh = r.get("threshold")
+                if isinstance(thresh, (list, dict)):
+                    r["threshold"] = str(thresh)
                     
                 final_reqs.append(FinalRequirement(**r))
                 
