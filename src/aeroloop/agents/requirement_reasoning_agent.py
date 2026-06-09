@@ -97,6 +97,15 @@ class RequirementReasoningAgent(BaseAIAgent):
                 if r.get("requirement_type") not in ["hard_constraint", "soft_objective", "report_only", "manual_review"]:
                     r["requirement_type"] = "report_only"
                     
+                # Validation fallback for operator
+                valid_ops = ["<", "<=", ">", ">=", "==", "!=", "in", "not_in"]
+                op = r.get("operator")
+                if op is not None and op not in valid_ops:
+                    if op in ["~=", "approx"]:
+                        r["operator"] = "=="
+                    else:
+                        r["operator"] = None
+                    
                 final_reqs.append(FinalRequirement(**r))
                 
             resolved = []
