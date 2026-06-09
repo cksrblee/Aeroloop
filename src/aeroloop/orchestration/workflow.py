@@ -301,15 +301,40 @@ def geometry_design_node(state: WorkflowState):
     }
 
 def aerodynamics_analysis_node(state: WorkflowState):
-    from aeroloop.schemas.analysis import AerodynamicsAnalysisRequest
+    from aeroloop.schemas.aerodynamics import AerodynamicsAnalysisRequest
     
     geo_result = state.get("geometry_design_result")
     if not geo_result or not geo_result.geometry_vsp3_path:
         return {"status": "error", "feedback_history": ["Missing geometry_design_result for simulation"]}
         
+    from aeroloop.schemas.aerodynamics import AeroAnalysisConfig, AircraftCandidate, GeometryArtifacts
+    import hashlib
+
+    run_id = state.get("run_id", "run-001")
+    candidate_id = geo_result.candidate_id if hasattr(geo_result, "candidate_id") else "AC-001"
+    mission_id = f"M-{hashlib.md5(run_id.encode()).hexdigest()[:8]}"
+
     req = AerodynamicsAnalysisRequest(
-        geometry_vsp3_path=geo_result.geometry_vsp3_path,
-        analysis_type="mass_props"
+        aero_analysis_request_id=f"AERO-REQ-{hashlib.md5((run_id + candidate_id).encode()).hexdigest()[:8]}",
+        run_id=run_id,
+        mission_id=mission_id,
+        candidate_id=candidate_id,
+        geometry_result_id=geo_result.geometry_result_id if hasattr(geo_result, "geometry_result_id") else "GEO-RES-001",
+        aircraft_candidate=AircraftCandidate(
+            candidate_id=candidate_id,
+            aircraft_type="unknown",
+            template_id="TPL-001"
+        ),
+        geometry_artifacts=GeometryArtifacts(
+            vsp3_file_path=geo_result.geometry_vsp3_path
+        ),
+        analysis_config=AeroAnalysisConfig(
+            analysis_backend="openvsp_vspaero",
+            analysis_fidelity="low",
+            run_mass_properties=True,
+            run_vspaero=False # Simplified to mass props by default for this workflow node unless specified
+        ),
+        output_directory="/tmp"
     )
     
     # We pass the request directly via dict to run() matching BaseAIAgent expectations

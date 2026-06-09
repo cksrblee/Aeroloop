@@ -1,154 +1,136 @@
 import os
-import sys
+import uuid
+import tempfile
 from typing import Dict, Any
 
 from aeroloop.agents.base_agent import BaseAIAgent
-from aeroloop.schemas.analysis import AerodynamicsAnalysisRequest, AerodynamicsAnalysisResult
+from aeroloop.schemas.aerodynamics import (
+    AerodynamicsAnalysisRequest,
+    AerodynamicsAnalysisResult,
+    AeroAnalysisSetup,
+    AerodynamicSummary,
+    AeroFeasibilityAssessment,
+    AeroAnalysisArtifacts
+)
+from aeroloop.aerodynamics.vspaero_runner import VSPAeroRunner
+from aeroloop.aerodynamics.vspaero_result_parser import parse_vspaero_results
+from aeroloop.aerodynamics.mass_properties_runner import run_mass_properties
+from aeroloop.schemas.common import ErrorInfo
 
 class AerodynamicsAnalysisAgent(BaseAIAgent):
     """
-    Executes low-fidelity aerodynamic and mass properties analysis on the generated geometry.
+    Executes low-fidelity aerodynamic and mass properties analysis on the generated geometry using OpenVSP/VSPAERO.
     """
     def __init__(self, **kwargs):
         super().__init__(
             name="Aerodynamics Analysis Agent",
-            description="Analyzes OpenVSP geometries to compute mass, volume, and aerodynamic properties.",
+            description="Analyzes OpenVSP geometries to compute mass, volume, and aerodynamic properties using VSPAERO.",
             **kwargs
         )
 
     def process_request(self, request: AerodynamicsAnalysisRequest) -> AerodynamicsAnalysisResult:
-        try:
-            import openvsp as vsp
-        except ImportError:
-            return AerodynamicsAnalysisResult(status="failed", error="OpenVSP Python API is not available.")
-
-        if not os.path.exists(request.geometry_vsp3_path):
-            return AerodynamicsAnalysisResult(status="failed", error=f"File not found: {request.geometry_vsp3_path}")
-
-        try:
-            vsp.VSPRenew()
-            vsp.ReadVSPFile(request.geometry_vsp3_path)
+        result = AerodynamicsAnalysisResult(
+            aero_analysis_result_id=f"AERO-RESULT-{uuid.uuid4().hex[:8]}",
+            aero_analysis_request_id=request.aero_analysis_request_id,
+            run_id=request.run_id,
+            mission_id=request.mission_id,
+            candidate_id=request.candidate_id,
+            status="failed"
+        )
+        
+        # 1. Validate Geometry Input
+        vsp3_path = request.geometry_artifacts.vsp3_file_path
+        if not os.path.exists(vsp3_path):
+            result.errors.append(ErrorInfo(error_id="GEOMETRY_FILE_NOT_FOUND", module_name="AerodynamicsAnalysisAgent", message=f"File not found: {vsp3_path}", recoverable=False))
+            return result
             
-            metrics = {}
-            if request.analysis_type == "mass_props":
-                # Compute Mass Properties
-                vsp.ComputeMassProps(0, 100, 0)
-                results = vsp.FindResultsID("Mass_Properties")
-                try:
-                    metrics["Volume"] = round(vsp.GetDoubleResults(results, "Total_Volume")[0], 2)
-                    metrics["Wetted_Area"] = round(vsp.GetDoubleResults(results, "Total_Wetted_Area")[0], 2)
-                    metrics["CG_X"] = round(vsp.GetDoubleResults(results, "CG_X")[0], 2)
-                except Exception as e:
-                    return AerodynamicsAnalysisResult(status="failed", error=f"Failed to extract mass props: {e}")
-            elif request.analysis_type == "aerodynamics":
-                import subprocess
-                # Setup Reference
-                geom_ids = vsp.FindGeoms()
-                wing_id = None
-                for gid in geom_ids:
-                    if vsp.GetGeomTypeName(gid) == "Wing":
+        try:
+            # 2. Initialize VSPAeroRunner
+            runner = VSPAeroRunner() # Attempts to load vsp module
+            runner.load_or_generate_vsp3(vsp3_path)
+            
+            # Setup Analysis Record
+            result.analysis_setup = AeroAnalysisSetup(
+                analysis_backend=request.analysis_config.analysis_backend,
+                analysis_fidelity=request.analysis_config.analysis_fidelity,
+                aircraft_type=request.aircraft_candidate.aircraft_type,
+                angle_of_attack_deg=request.analysis_config.angle_of_attack_deg,
+                sideslip_deg=request.analysis_config.sideslip_deg,
+                speed_mps=request.analysis_config.speed_mps,
+                altitude_m=request.analysis_config.altitude_m
+            )
+            
+            # Resolve Reference Geometry (Optional depending on how sizing passed it)
+            # For simplicity, fallback to OpenVSP's wing if not explicitly given
+            wing_name = "Wing"
+            wing_id = None
+            geom_ids = runner.vsp.FindGeomsWithName(wing_name)
+            if geom_ids:
+                wing_id = geom_ids[0]
+            else:
+                # Find any wing
+                all_geoms = runner.vsp.FindGeoms()
+                for gid in all_geoms:
+                    if runner.vsp.GetGeomTypeName(gid) == "Wing":
                         wing_id = gid
                         break
+            
+            if request.analysis_config.run_mass_properties:
+                # 3. Run Mass Properties
+                mass_result = run_mass_properties(runner.vsp, num_slices=request.analysis_config.mass_property_num_slices)
+                result.mass_properties = mass_result
+                if mass_result.warnings:
+                    result.warnings.extend(mass_result.warnings)
+            
+            if request.analysis_config.run_vspaero:
+                # 4. Compute Geometry
+                runner.run_compute_geometry()
                 
-                # Export to VSPGEOM manually to avoid VSPAEROSweep deadlock
-                base_dir = os.path.dirname(request.geometry_vsp3_path)
-                base_name = os.path.basename(request.geometry_vsp3_path).replace(".vsp3", "")
-                geom_path = os.path.join(base_dir, f"{base_name}.vspgeom")
-                
-                vsp.ExportFile(geom_path, vsp.SET_ALL, vsp.EXPORT_VSPGEOM)
-                
-                # Write vspaero setup file
-                setup_path = os.path.join(base_dir, f"{base_name}.vspaero")
-                setup_content = f"""Sref = 100.0
-Cref = 1.0
-Bref = 1.0
-X_cg = 0.0
-Y_cg = 0.0
-Z_cg = 0.0
-Mach = 0.0
-AoA = 5.0
-Beta = 0.0
-Vinf = 100.0
-Rho = 0.002377
-ReCref = 10000000.0
-Symmetry = 0
-FarDist = -1.0
-NumWakeNodes = 8
-WakeIters = 5
-"""
-                with open(setup_path, "w") as f:
-                    f.write(setup_content)
-                
-                # Run vspaero directly
-                vspaero_exe = "/root/anaconda3/envs/aero/bin/vspaero"
-                run_target = os.path.join(base_dir, base_name)
-                
-                vspaero_success = False
-                try:
-                    subprocess.run([vspaero_exe, "-omp", "4", run_target], cwd=base_dir, check=True, capture_output=True)
-                    vspaero_success = True
-                except subprocess.CalledProcessError as e:
-                    pass  # Fallback will be triggered
-                
-                metrics["CL"] = 0.0
-                metrics["CD"] = 0.0
-                metrics["L_D"] = 0.0
-                
-                # Attempt to Read Polar/History if successful
-                if vspaero_success:
-                    polar_path = os.path.join(base_dir, f"{base_name}.polar")
-                    if os.path.exists(polar_path):
-                        with open(polar_path, "r") as f:
-                            lines = f.readlines()
-                            for line in lines:
-                                if "0.000000" in line and "5.000000" in line:  # Mach 0, AoA 5
-                                    parts = line.split()
-                                    if len(parts) >= 8:
-                                        try:
-                                            metrics["CL"] = round(float(parts[5]), 4)
-                                            metrics["CD"] = round(float(parts[6]), 4)
-                                            metrics["L_D"] = round(float(parts[5]) / float(parts[6]), 2) if float(parts[6]) != 0 else 0.0
-                                        except:
-                                            pass
-                
-                # Empirical Fallback if VSPAERO failed or results missing
-                if metrics["CL"] == 0.0 and wing_id:
-                    vsp.SetAnalysisInputDefaults("ParasiteDrag")
-                    vsp.ExecAnalysis("ParasiteDrag")
-                    pd_res = vsp.FindResultsID("Parasite_Drag")
+                # 5. Run Sweep
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    log_file = os.path.join(temp_dir, "vspaero.log")
                     
-                    try:
-                        cd0 = vsp.GetDoubleResults(pd_res, "Total_CD_Total")[0]
-                    except:
-                        cd0 = 0.02
+                    sweep_res_id = runner.run_vspaero_sweep(
+                        alpha_range=request.analysis_config.angle_of_attack_deg,
+                        mach_range=[0.0] if not request.analysis_config.speed_mps else request.analysis_config.speed_mps, # Simplified Mach for PoC
+                        geom_set=0,
+                        wing_id=wing_id,
+                        redirect_file=log_file
+                    )
+                    
+                    # 6. Parse Results
+                    parsed_data = parse_vspaero_results(runner.vsp, sweep_res_id)
+                    result.aerodynamic_coefficients = parsed_data.get("coefficients", [])
+                    
+                    if parsed_data.get("warnings"):
+                        result.warnings.extend(parsed_data.get("warnings"))
                         
-                    # Default typical subsonic wing properties for fallback
-                    ar = 8.0
-                    
-                    import math
-                    # CL_alpha roughly 2*pi*AR / (AR + 2)
-                    cl_alpha = (2 * math.pi * ar) / (ar + 2)
-                    alpha_rad = 5.0 * math.pi / 180.0
-                    
-                    cl = cl_alpha * alpha_rad
-                    e_oswald = 0.8
-                    cd_induced = (cl**2) / (math.pi * e_oswald * ar)
-                    cd = cd0 + cd_induced
-                    
-                    metrics["CL"] = round(cl, 4)
-                    metrics["CD"] = round(cd, 4)
-                    metrics["L_D"] = round(cl / cd, 2) if cd > 0 else 0.0
-                    note_str = "VSPAERO mesh failed; used empirical surrogate model for CL and CD."
-                    return AerodynamicsAnalysisResult(status="success", metrics=metrics, note=note_str)
-                                
-                return AerodynamicsAnalysisResult(status="success", metrics=metrics)
+                    # Calculate basic summary
+                    coeffs = result.aerodynamic_coefficients
+                    if coeffs:
+                        cd_min = min((c.cd for c in coeffs if c.cd is not None), default=None)
+                        ld_ratios = [(c.cl / c.cd) for c in coeffs if c.cl is not None and c.cd is not None and c.cd > 0]
+                        max_ld = max(ld_ratios) if ld_ratios else None
+                        
+                        result.aerodynamic_summary = AerodynamicSummary(
+                            cd_min=cd_min,
+                            max_lift_to_drag=max_ld
+                        )
+                        
+            # Determine Final Status
+            if result.errors:
+                result.status = "failed"
+            elif result.warnings:
+                result.status = "success_with_warnings"
             else:
-                return AerodynamicsAnalysisResult(status="failed", error=f"Unsupported analysis type: {request.analysis_type}")
+                result.status = "success"
                 
-            return AerodynamicsAnalysisResult(status="success", metrics=metrics)
+            return result
             
         except Exception as e:
-            return AerodynamicsAnalysisResult(status="failed", error=str(e))
+            result.errors.append(ErrorInfo(error_id="RUNTIME_EXCEPTION", module_name="AerodynamicsAnalysisAgent", message=str(e), recoverable=False))
+            result.status = "failed"
+            return result
 
     def run(self, state: Dict[str, Any]) -> Dict[str, Any]:
         req_dict = state.get("analysis_request")

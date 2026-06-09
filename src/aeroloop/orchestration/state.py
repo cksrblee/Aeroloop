@@ -8,7 +8,7 @@ from aeroloop.schemas.compliance import CertificationComplianceResult, Certifica
 from aeroloop.schemas.aircraft import AircraftConcept
 from aeroloop.schemas.engineering import SizingAgentResult
 from aeroloop.schemas.geometry import GeometryDesignResult
-from aeroloop.schemas.analysis import AerodynamicsAnalysisResult
+from aeroloop.schemas.aerodynamics import AerodynamicsAnalysisResult
 from aeroloop.schemas.traceability import TraceabilityRegistry
 
 def add_items(a: list | None, b: list | None) -> list:
