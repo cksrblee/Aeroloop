@@ -3,14 +3,15 @@ from typing import Optional, List, Dict, Any, Literal
 from datetime import datetime
 
 VehicleType = Literal[
-    "multirotor",
-    "helicopter",
-    "small_aircraft",
+    "evtol",
+    "vtol",
+    "rotorcraft",
     "fixed_wing",
+    "lift_cruise",
     "lift_cruise_vtol",
-    "tiltrotor_vtol",
-    "tiltwing_vtol",
-    "compound_helicopter"
+    "tiltrotor",
+    "small_helicopter",
+    "small_aircraft"
 ]
 
 class ParameterSource(BaseModel):

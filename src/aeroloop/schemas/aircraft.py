@@ -10,8 +10,10 @@ class AircraftConcept(BaseModel):
         "rotorcraft",
         "fixed_wing",
         "lift_cruise",
-        "multirotor",
+        "lift_cruise_vtol",
         "tiltrotor",
+        "small_helicopter",
+        "small_aircraft",
         "unknown"
     ]
 

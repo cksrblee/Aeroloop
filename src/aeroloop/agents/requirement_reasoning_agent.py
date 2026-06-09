@@ -30,7 +30,7 @@ class RequirementReasoningAgent(BaseAIAgent):
         except Exception:
             self.kb = None
 
-    def refine(self, request: RequirementReasoningInput) -> RequirementReasoningResult:
+    def refine(self, request: RequirementReasoningInput, force_auto: bool = False) -> RequirementReasoningResult:
         """
         Merges candidate requirements, detects conflicts, and resolves them.
         """
@@ -74,7 +74,11 @@ class RequirementReasoningAgent(BaseAIAgent):
                 for q in rem_q:
                     print(f"  - {q}")
                     
-                user_answer = input("\n[User] Provide answers (or type 'auto' to force LLM inference): ")
+                if force_auto:
+                    user_answer = 'auto'
+                    print(f"\n[RequirementReasoningAgent] Running in full-auto mode. Forcing LLM inference for {len(rem_q)} questions...")
+                else:
+                    user_answer = input("\n[User] Provide answers (or type 'auto' to force LLM inference): ")
                 
                 if user_answer.strip().lower() == 'auto':
                     print("\n[RequirementReasoningAgent] Forcing LLM to automatically infer missing details...")
@@ -155,7 +159,7 @@ class RequirementReasoningAgent(BaseAIAgent):
             concept_baseline = None
             if cb_data:
                 try:
-                    valid_ac_types = ["evtol", "vtol", "rotorcraft", "fixed_wing", "lift_cruise", "multirotor", "tiltrotor", "unknown"]
+                    valid_ac_types = ["evtol", "vtol", "rotorcraft", "fixed_wing", "lift_cruise", "lift_cruise_vtol", "multirotor", "tiltrotor", "small_helicopter", "small_aircraft", "unknown"]
                     if cb_data.get("aircraft_type") not in valid_ac_types:
                         cb_data["aircraft_type"] = "unknown"
                         
@@ -256,7 +260,7 @@ Format your response STRICTLY as a JSON object matching this structure:
 {{
   "concept_baseline": {{
     "concept_id": "CONCEPT-001",
-    "aircraft_type": "lift_cruise",
+    "aircraft_type": "lift_cruise_vtol",
     "target_range_km": 100.0,
     "target_cruise_speed_mps": 30.0,
     "target_payload_kg": 400.0,

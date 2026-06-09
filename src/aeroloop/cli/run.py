@@ -546,7 +546,8 @@ def run_workflow(args):
             raw_user_input=raw_text
         ),
         "mission_profile": None,
-        "status": "running"
+        "status": "running",
+        "full_auto": getattr(args, "full_auto", False)
     }
     
     print("\n--- Starting Bidirectional Workflow ---")
@@ -646,6 +647,11 @@ def main():
         "text",
         type=str,
         help="The natural language mission description. Pass 'demo' to load from demo_requirements.md."
+    )
+    workflow_parser.add_argument(
+        "--full-auto",
+        action="store_true",
+        help="Run the entire workflow automatically without any human-in-the-loop prompts."
     )
 
     args = parser.parse_args()

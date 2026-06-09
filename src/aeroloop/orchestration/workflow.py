@@ -63,7 +63,9 @@ def mission_parsing_node(state: WorkflowState):
         registry = TraceabilityRegistry()
     
     try:
-        result = mission_agent.parse(raw_input)
+        force_auto = state.get("full_auto", False)
+        print(f"\n[MissionParsingAgent] Extracting mission profile and constraints (Run ID: {run_id})...")
+        result = mission_agent.parse(raw_input, force_auto=force_auto)
         if result.missing_fields:
             # If there are missing fields, it routes back with an error
             return {
@@ -88,6 +90,8 @@ def customer_requirement_node(state: WorkflowState):
         return {"status": "error", "feedback_history": ["Missing mission_profile for customer_requirement_node"]}
         
     try:
+        run_id = state.get("run_id", "unknown_run")
+        print(f"\n[CustomerRequirementAgent] Generating candidate customer and operational requirements (Run ID: {run_id})...")
         result = customer_agent.analyze(mission_profile)
         
         # Determine if we should report errors back to the orchestrator
@@ -132,6 +136,7 @@ def certification_compliance_node(state: WorkflowState):
             )
         )
         
+        print(f"\n[CertificationComplianceAgent] Identifying applicable certification regulations (Run ID: {comp_input.run_id})...")
         result = cert_agent.analyze(comp_input)
         
         dump_intermediate_result(state.get("run_id", "unknown_run"), "certification_compliance_result.json", result)
@@ -160,7 +165,9 @@ def requirement_reasoning_node(state: WorkflowState):
         unresolved_questions=unresolved_questions
     )
     
-    result = reasoning_agent.refine(req)
+    force_auto = state.get("full_auto", False)
+    print(f"\n[RequirementReasoningAgent] Resolving conflicts and synthesizing final requirements (Run ID: {run_id})...")
+    result = reasoning_agent.refine(req, force_auto=force_auto)
     
     # Store TraceLinks to Registry
     registry = state.get("traceability_registry")
@@ -196,6 +203,7 @@ def certification_validator_node(state: WorkflowState):
         compliance_result=comp_result
     )
     
+    print(f"\n[CertificationValidatorAgent] Validating aircraft concept baseline against certification rules (Run ID: {req.run_id})...")
     result = validator_agent.validate(req)
     
     if not result.is_valid:
@@ -247,6 +255,8 @@ def sizing_node(state: WorkflowState):
         final_requirements=final_reqs
     )
     
+    sizing_iters = state.get("sizing_iteration_count", 0) + 1
+    print(f"\n[SizingAgent] Running iterative sizing calculations (Candidate: {candidate_id}, Iteration: {sizing_iters})...")
     result = sizing_agent.size(req)
     
     # Dump result to JSON for user visibility
@@ -284,7 +294,7 @@ def sizing_node(state: WorkflowState):
     }
 
 def geometry_design_node(state: WorkflowState):
-    from aeroloop.schemas.geometry import GeometryDesignRequest, ValidationOptions
+    from aeroloop.schemas.geometry import GeometryDesignRequest, GeometryValidationOptions
     
     sizing_result = state.get("sizing_result")
     if not sizing_result or not sizing_result.geometry_parameter_set:
@@ -300,14 +310,17 @@ def geometry_design_node(state: WorkflowState):
     req = GeometryDesignRequest(
         geometry_request_id=f"GEO-REQ-{hashlib.md5(config_id.encode()).hexdigest()[:8]}",
         run_id=run_id,
+        mission_id=sizing_result.mission_id if hasattr(sizing_result, 'mission_id') else "unknown_mission",
         candidate_id=sizing_result.candidate_id,
         configuration_id=config_id,
         vehicle_type=sizing_result.geometry_parameter_set.aircraft_type,
+        geometry_template="maximal",
         design_parameters=sizing_result.geometry_parameter_set.dict(exclude_none=True),
         output_directory=str(geo_out_dir),
-        validation_options=ValidationOptions(validate_mesh=False)
+        validation_options=GeometryValidationOptions(validate_mesh=False)
     )
     
+    print(f"\n[GeometryDesignAgent] Generating 3D parametric geometry models (Candidate: {sizing_result.candidate_id}, Vehicle Type: {req.vehicle_type})...")
     result = geometry_agent.process_request(req)
     
     # Store TraceLinks to Registry
@@ -360,6 +373,7 @@ def aerodynamics_analysis_node(state: WorkflowState):
     )
     
     # We pass the request directly via dict to run() matching BaseAIAgent expectations
+    print(f"\n[AerodynamicsAnalysisAgent] Executing aerodynamics analysis pipeline (Candidate: {candidate_id}, Backend: {req.analysis_config.analysis_backend})...")
     res = analysis_agent.run({"analysis_request": req})
     
     # Extract the result and return state updates

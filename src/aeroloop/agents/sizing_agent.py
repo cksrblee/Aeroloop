@@ -75,8 +75,22 @@ class SizingAgent(BaseAIAgent):
 
     def _get_template(self, baseline: ConceptBaseline, config: SizingConfig, warnings: List[str]) -> SizingTemplate:
         ac_type = baseline.aircraft_type
-        if ac_type in self.templates:
-            return self.templates[ac_type]
+        
+        # Robust mapping for LLM generated types
+        type_mapping = {
+            "lift_cruise": "lift_cruise_vtol",
+            "evtol": "lift_cruise_vtol",
+            "vtol": "lift_cruise_vtol",
+            "tiltrotor": "lift_cruise_vtol",
+            "rotorcraft": "small_helicopter",
+            "fixed_wing": "small_aircraft"
+        }
+        mapped_type = type_mapping.get(ac_type, ac_type)
+        
+        if mapped_type in self.templates:
+            if mapped_type != ac_type:
+                warnings.append(f"Mapped aircraft type '{ac_type}' to template '{mapped_type}'.")
+            return self.templates[mapped_type]
         elif config.allow_template_fallback:
             warnings.append(f"Unknown aircraft type '{ac_type}'. Falling back to lift_cruise_vtol.")
             return self.templates["lift_cruise_vtol"]

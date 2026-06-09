@@ -1,7 +1,7 @@
 from typing import TypedDict, Annotated
 import operator
 from aeroloop.schemas.mission import MissionProfile, MissionParsingInput
-from aeroloop.schemas.requirement import CandidateRequirement, FinalRequirement, RequirementConflict
+from aeroloop.schemas.requirement import CandidateRequirement, FinalRequirement, RequirementConflict, RequirementReasoningResult
 from aeroloop.schemas.common import Assumption, ErrorInfo
 from aeroloop.schemas.regulation import RegulationEvidence
 from aeroloop.schemas.compliance import CertificationComplianceResult, CertificationValidationResult
@@ -29,6 +29,7 @@ class WorkflowState(TypedDict):
     mission_profile: MissionProfile | None
     aircraft_concept: AircraftConcept | None
     certification_compliance_result: CertificationComplianceResult | None
+    requirement_reasoning_result: RequirementReasoningResult | None
     certification_validation_result: CertificationValidationResult | None
     sizing_result: SizingAgentResult | None
     geometry_design_result: GeometryDesignResult | None
@@ -48,6 +49,8 @@ class WorkflowState(TypedDict):
     assumptions: list[Assumption] | None
     errors: list[ErrorInfo] | None
     unresolved_questions: list[str] | None
+    
+    full_auto: bool | None
     
     # Bidirectional Routing Variables
     feedback_history: Annotated[list[str], add_items]

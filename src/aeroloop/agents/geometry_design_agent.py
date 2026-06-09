@@ -57,6 +57,10 @@ class GeometryDesignAgent(BaseAIAgent):
 
         # Check OpenVSP
         try:
+            import sys
+            openvsp_path = os.environ.get("OPENVSP_PYTHON_PATH", "/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp")
+            if openvsp_path not in sys.path:
+                sys.path.insert(0, openvsp_path)
             import openvsp as vsp
         except ImportError:
             return self._fail(request, "VSP_MODULE_MISSING", "OpenVSP Python API is not installed or available.", recoverable=False)

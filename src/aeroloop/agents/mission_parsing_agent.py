@@ -62,7 +62,7 @@ The output must strictly follow the schema structure provided.
 
 
     @observe()
-    def parse(self, raw_input: MissionParsingInput) -> MissionParsingResult:
+    def parse(self, raw_input: MissionParsingInput, force_auto: bool = False) -> MissionParsingResult:
         """
         Extracts explicit mission facts from the user's natural language mission description.
         
@@ -114,7 +114,11 @@ The output must strictly follow the schema structure provided.
                 for mf in result.missing_fields:
                     print(f"  - {mf.field_name}: {mf.suggested_question}")
                 
-                user_answer = input("\n[User] Provide missing info (or type 'skip' to ignore): ")
+                if force_auto:
+                    user_answer = 'skip'
+                    print("\n[MissionParsingAgent] Running in full-auto mode. Forcing LLM to infer missing info...")
+                else:
+                    user_answer = input("\n[User] Provide missing info (or type 'skip' to ignore): ")
                 
                 if user_answer.strip().lower() == 'skip':
                     print("\n[MissionParsingAgent] User skipped. Inferring missing information...")
