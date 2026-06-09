@@ -47,14 +47,40 @@ class RequirementReasoningAgent(BaseAIAgent):
         prompt = self._build_prompt(request, kb_context)
         
         try:
-            response_text = self.llm_model.generate(prompt)
-            # Find JSON block
-            start = response_text.find("{")
-            end = response_text.rfind("}")
-            if start != -1 and end != -1:
-                response_json = json.loads(response_text[start:end+1])
-            else:
-                raise ValueError("No JSON object found in response.")
+            max_iterations = 3
+            response_json = {}
+            for iteration in range(max_iterations):
+                print(f"\n[RequirementReasoningAgent] Reasoning... (Iteration {iteration + 1}/{max_iterations})")
+                response_text = self.llm_model.generate(prompt)
+                
+                # Find JSON block
+                start = response_text.find("{")
+                end = response_text.rfind("}")
+                if start != -1 and end != -1:
+                    response_json = json.loads(response_text[start:end+1])
+                else:
+                    raise ValueError("No JSON object found in response.")
+
+                rem_q = response_json.get("remaining_unresolved_questions", [])
+                
+                if not rem_q:
+                    # All resolved automatically
+                    break
+                    
+                if iteration == max_iterations - 1:
+                    break
+                    
+                print(f"\n[RequirementReasoningAgent] ⚠️ Needs HITL! Unresolved questions ({len(rem_q)}):")
+                for q in rem_q:
+                    print(f"  - {q}")
+                    
+                user_answer = input("\n[User] Provide answers (or type 'auto' to force LLM inference): ")
+                
+                if user_answer.strip().lower() == 'auto':
+                    print("\n[RequirementReasoningAgent] Forcing LLM to automatically infer missing details...")
+                    prompt += f"\n\nAssistant returned unresolved questions: {rem_q}\n\nSystem: The user refused to answer. You MUST force auto-inference for ALL of these. Do NOT leave them in remaining_unresolved_questions. Make bold assumptions and put them in resolved_assumptions."
+                else:
+                    prompt += f"\n\nAssistant returned unresolved questions: {rem_q}\n\nUser answered: {user_answer}\n\nPlease update the final_requirements and resolved_assumptions based on this."
 
             # Construct final requirements
             final_reqs = []
@@ -153,6 +179,11 @@ Instructions:
 2. For ANY new requirements you generate, the `requirement_type` MUST be strictly one of: "hard_constraint", "soft_objective", "report_only", or "manual_review". Do NOT use the word "assumption" here.
 3. You MUST fully populate ALL OpenVSP architectural parameters in the `concept_baseline` based on mission context. These include: `target_rotor_count`, `max_wingspan_m`, `max_length_m`, `fuselage_width_m_target`, and `fuselage_height_m_target`. If not specified, invent reasonable constraints (e.g., UAM vertiports might dictate max_wingspan_m=15.0).
 4. synthesize the `final_requirements` into a high-level `concept_baseline` which acts as the SizingDraft for the SizingAgent. Physics-derived fields like mtow_kg and wing_area_m2 should be left blank as they will be calculated downstream.
+
+CRITICAL INSTRUCTION:
+You must almost ALWAYS automatically resolve unresolved_questions using your internal domain knowledge (eVTOL, Aerospace, etc.) and bold assumptions. DO NOT be passive.
+Put your guessed values in `resolved_assumptions`. 
+ONLY if a question is fundamentally contradictory or mathematically impossible to guess should you put it in `remaining_unresolved_questions`. In 99% of cases, `remaining_unresolved_questions` MUST BE EMPTY [].
 
 Format your response STRICTLY as a JSON object matching this structure:
 {{

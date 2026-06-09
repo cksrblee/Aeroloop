@@ -1,0 +1,8 @@
+workflow:
+  recursion_limit: 100
+  default_user_id: "default_user"
+  base_output_dir: "results"
+
+llm:
+  model_name: "gpt-5.4-mini"
+  temperature: 0.0

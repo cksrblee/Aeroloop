@@ -117,6 +117,27 @@ The output must strictly follow the schema structure provided.
                 user_answer = input("\n[User] Provide missing info (or type 'skip' to ignore): ")
                 
                 if user_answer.strip().lower() == 'skip':
+                    print("\n[MissionParsingAgent] User skipped. Inferring missing information...")
+                    messages.append({
+                        "role": "assistant",
+                        "content": result.model_dump_json()
+                    })
+                    messages.append({
+                        "role": "system",
+                        "content": "The user has chosen to skip providing the missing information. You MUST now INFER the most likely reasonable default values for all missing fields based on standard domain knowledge (e.g. Urban Air Mobility, eVTOL operations). Populate the missing fields in the mission_profile, completely empty the missing_fields list (return an empty array []), and create a corresponding Assumption object for each inferred field stating the assumed value and reason."
+                    })
+                    result = self.llm_model.generate_structured(messages, MissionParsingResult)
+                    if result.mission_id != raw_input.mission_id:
+                        result.mission_id = raw_input.mission_id
+                    if result.raw_input != raw_input.raw_user_input:
+                        result.raw_input = raw_input.raw_user_input
+                    
+                    # Programmatic safeguard: if LLM still populated missing_fields despite the instruction,
+                    # we force it to be empty so the workflow can proceed.
+                    if result.missing_fields:
+                        print("\n[MissionParsingAgent] Warning: LLM did not empty missing_fields. Forcing it to be empty to proceed.")
+                        result.missing_fields = []
+                        
                     return result
                 
                 # Append assistant's last state and user's answer to messages

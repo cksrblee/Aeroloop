@@ -19,7 +19,7 @@ DEMO_FILE = Path("demo_requirements.md")
 def init_adapter():
     """Initialize the OpenAI Adapter with standard configuration."""
     # The adapter will pick up OPENAI_API_KEY from environment variables automatically
-    return OpenAIAdapter(model_name="gpt-5.4-mini", temperature=0.0)
+    return OpenAIAdapter(model_name=config.llm_model_name, temperature=config.llm_temperature)
 
 def ensure_agents_dir():
     """Ensure the legacy .agents/ output directory exists (used for fallbacks)."""

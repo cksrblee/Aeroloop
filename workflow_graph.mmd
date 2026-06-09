@@ -1,0 +1,38 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	mission_parsing(mission_parsing)
+	customer_requirement(customer_requirement)
+	certification_compliance(certification_compliance)
+	requirement_reasoning(requirement_reasoning)
+	certification_validator(certification_validator)
+	sizing(sizing)
+	geometry_design(geometry_design)
+	aerodynamics_analysis(aerodynamics_analysis)
+	orchestrator(orchestrator)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> orchestrator;
+	aerodynamics_analysis --> orchestrator;
+	certification_compliance --> orchestrator;
+	certification_validator --> orchestrator;
+	customer_requirement --> orchestrator;
+	geometry_design --> orchestrator;
+	mission_parsing --> orchestrator;
+	orchestrator -. &nbsp;END&nbsp; .-> __end__;
+	orchestrator -.-> aerodynamics_analysis;
+	orchestrator -.-> certification_compliance;
+	orchestrator -.-> certification_validator;
+	orchestrator -.-> customer_requirement;
+	orchestrator -.-> geometry_design;
+	orchestrator -.-> mission_parsing;
+	orchestrator -.-> requirement_reasoning;
+	orchestrator -.-> sizing;
+	requirement_reasoning --> orchestrator;
+	sizing --> orchestrator;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

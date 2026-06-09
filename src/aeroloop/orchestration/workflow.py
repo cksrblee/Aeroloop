@@ -18,7 +18,7 @@ import hashlib
 
 # Initialize singletons / agents
 # We can inject these later, but for simplicity we instantiate them here.
-llm_adapter = OpenAIAdapter(model_name="gpt-5.4-mini", temperature=0.0)
+llm_adapter = OpenAIAdapter(model_name=config.llm_model_name, temperature=config.llm_temperature)
 mission_agent = MissionParsingAgent(llm_model=llm_adapter)
 customer_agent = CustomerRequirementAgent()
 cert_agent = CertificationComplianceAgent()
@@ -28,6 +28,21 @@ sizing_agent = SizingAgent()
 geometry_agent = GeometryDesignAgent()
 analysis_agent = AerodynamicsAnalysisAgent()
 reasoning_agent = RequirementReasoningAgent(llm_model=llm_adapter)
+
+def dump_intermediate_result(run_id: str, filename: str, result_obj: Any):
+    from typing import Any
+    try:
+        run_dir = config.get_run_dir(run_id)
+        out_path = run_dir / filename
+        if hasattr(result_obj, "model_dump_json"):
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(result_obj.model_dump_json(indent=2))
+        else:
+            import json
+            with open(out_path, "w", encoding="utf-8") as f:
+                json.dump(result_obj, f, indent=2, default=str)
+    except Exception as e:
+        print(f"Warning: Failed to dump {filename}: {e}")
 
 def mission_parsing_node(state: WorkflowState):
     raw_input = state.get("raw_input")
@@ -56,6 +71,7 @@ def mission_parsing_node(state: WorkflowState):
                 "feedback_history": [f"Missing mission fields: {[mf.field_name for mf in result.missing_fields]}"]
             }
         
+        dump_intermediate_result(run_id, "mission_parsing_result.json", result)
         return {
             "mission_profile": result.mission_profile,
             "run_id": run_id,
@@ -81,6 +97,8 @@ def customer_requirement_node(state: WorkflowState):
                 "feedback_history": ["Customer requirement validation failed."]
              }
              
+        run_id = state.get("run_id", "unknown_run")
+        dump_intermediate_result(run_id, "customer_requirements_result.json", result)
         return {
             "candidate_requirements": result.candidate_requirements,
             "assumptions": result.assumptions,
@@ -115,6 +133,7 @@ def certification_compliance_node(state: WorkflowState):
         
         result = cert_agent.analyze(comp_input)
         
+        dump_intermediate_result(state.get("run_id", "unknown_run"), "certification_compliance_result.json", result)
         return {
             "certification_compliance_result": result,
             "status": "running"
@@ -151,6 +170,7 @@ def requirement_reasoning_node(state: WorkflowState):
     # Clear unresolved questions from the main state if resolved, and append any remaining
     new_unresolved = result.remaining_unresolved_questions
     
+    dump_intermediate_result(run_id, "requirement_reasoning_result.json", result)
     return {
         "requirement_reasoning_result": result,
         "aircraft_concept": result.concept_baseline,
@@ -192,6 +212,7 @@ def certification_validator_node(state: WorkflowState):
             "feedback_history": [f"Certification Validation Failed: {result.violations}"]
         }
         
+    dump_intermediate_result(state.get("run_id", "unknown_run"), "certification_validation_result.json", result)
     return {
         "certification_validation_result": result,
         "status": "running"
