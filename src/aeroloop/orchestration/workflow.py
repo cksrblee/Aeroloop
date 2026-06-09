@@ -175,7 +175,7 @@ def requirement_reasoning_node(state: WorkflowState):
     return {
         "requirement_reasoning_result": result,
         "aircraft_concept": result.concept_baseline,
-        "candidate_requirements": result.final_requirements, # Feed final back into state for Sizing
+        "final_requirements": result.final_requirements, # Feed final back into state for Sizing
         "unresolved_questions": new_unresolved,
         "traceability_registry": registry,
         "status": "running" if not new_unresolved else "paused_for_hitl"
@@ -223,7 +223,7 @@ def sizing_node(state: WorkflowState):
     from aeroloop.schemas.engineering import SizingConfig, SizingRequest
     
     mission_profile = state.get("mission_profile")
-    candidate_reqs = state.get("candidate_requirements", [])
+    final_reqs = state.get("final_requirements", [])
     
     if not mission_profile:
         return {"status": "error", "feedback_history": ["Missing mission_profile for sizing"]}
@@ -244,7 +244,7 @@ def sizing_node(state: WorkflowState):
         mission_profile=mission_profile,
         concept_baseline=concept_baseline,
         sizing_config=SizingConfig(),
-        final_requirements=candidate_reqs
+        final_requirements=final_reqs
     )
     
     result = sizing_agent.size(req)

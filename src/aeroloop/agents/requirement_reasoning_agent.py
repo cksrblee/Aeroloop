@@ -137,6 +137,9 @@ class RequirementReasoningAgent(BaseAIAgent):
             )
 
         except Exception as e:
+            import traceback
+            print("\\n[RequirementReasoningAgent] Exception caught during reasoning:")
+            traceback.print_exc()
             return self._fail_result(request, f"Reasoning failed: {str(e)}")
 
     def _fail_result(self, request: RequirementReasoningInput, error: str) -> RequirementReasoningResult:
@@ -188,7 +191,7 @@ Format your response STRICTLY as a JSON object matching this structure:
 {{
   "concept_baseline": {{
     "concept_id": "CONCEPT-001",
-    "aircraft_type": "lift_cruise_vtol",
+    "aircraft_type": "lift_cruise",
     "target_range_km": 100.0,
     "target_cruise_speed_mps": 30.0,
     "target_payload_kg": 400.0,
