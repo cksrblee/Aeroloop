@@ -41,13 +41,13 @@ class WorkflowState(TypedDict):
     # Traceability and DB
     traceability_registry: TraceabilityRegistry | None
     
-    candidate_requirements: Annotated[list[CandidateRequirement], add_items]
-    final_requirements: Annotated[list[FinalRequirement], add_items]
-    regulation_evidence: Annotated[list[RegulationEvidence], add_items]
-    conflicts: Annotated[list[RequirementConflict], add_items]
-    assumptions: Annotated[list[Assumption], add_items]
-    errors: Annotated[list[ErrorInfo], add_items]
-    unresolved_questions: Annotated[list[str], add_items]
+    candidate_requirements: list[CandidateRequirement] | None
+    final_requirements: list[FinalRequirement] | None
+    regulation_evidence: list[RegulationEvidence] | None
+    conflicts: list[RequirementConflict] | None
+    assumptions: list[Assumption] | None
+    errors: list[ErrorInfo] | None
+    unresolved_questions: list[str] | None
     
     # Bidirectional Routing Variables
     feedback_history: Annotated[list[str], add_items]
