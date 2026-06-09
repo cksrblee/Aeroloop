@@ -88,10 +88,17 @@ class RequirementReasoningAgent(BaseAIAgent):
                 # Ensure missing fields are populated with defaults
                 r["requirement_id"] = r.get("requirement_id", "REQ-UNKNOWN")
                 r["mission_id"] = request.mission_profile.mission_id if hasattr(request.mission_profile, "mission_id") else "M-UNKNOWN"
-                r["priority"] = r.get("priority", "medium")
-                r["severity"] = r.get("severity", "medium")
-                r["verification_target"] = r.get("verification_target", "aircraft_candidate")
-                r["runtime_rule_ready"] = r.get("runtime_rule_ready", False)
+                
+                if r.get("priority") not in ["low", "medium", "high", "critical"]:
+                    r["priority"] = "medium"
+                if r.get("severity") not in ["low", "medium", "high", "critical"]:
+                    r["severity"] = "medium"
+                    
+                valid_vt = ["aircraft_candidate", "engineering_calculation", "path_planning", "runtime_simulation", "path_planning_and_runtime_simulation", "report_only", "manual_review"]
+                if r.get("verification_target") not in valid_vt:
+                    r["verification_target"] = "aircraft_candidate"
+                    
+                r["runtime_rule_ready"] = bool(r.get("runtime_rule_ready", False))
                 
                 # Validation fallback for requirement_type
                 if r.get("requirement_type") not in ["hard_constraint", "soft_objective", "report_only", "manual_review"]:
@@ -116,6 +123,13 @@ class RequirementReasoningAgent(BaseAIAgent):
             resolved = []
             for a in response_json.get("resolved_assumptions", []):
                 try:
+                    if "assumed_value" in a and isinstance(a["assumed_value"], (list, dict)):
+                        a["assumed_value"] = str(a["assumed_value"])
+                    if "confidence" in a:
+                        try:
+                            a["confidence"] = float(a["confidence"])
+                        except (ValueError, TypeError):
+                            a["confidence"] = 0.5
                     resolved.append(ResolvedAssumption(**a))
                 except Exception as e:
                     print(f"Warning: Failed to parse assumption: {e}")
@@ -141,6 +155,18 @@ class RequirementReasoningAgent(BaseAIAgent):
             concept_baseline = None
             if cb_data:
                 try:
+                    valid_ac_types = ["evtol", "vtol", "rotorcraft", "fixed_wing", "lift_cruise", "multirotor", "tiltrotor", "unknown"]
+                    if cb_data.get("aircraft_type") not in valid_ac_types:
+                        cb_data["aircraft_type"] = "unknown"
+                        
+                    valid_prop = ["electric", "hybrid_electric", "turbine", "piston", "unknown"]
+                    if cb_data.get("propulsion_type") not in valid_prop:
+                        cb_data["propulsion_type"] = "unknown"
+                        
+                    valid_ops = ["passenger_transport", "cargo", "urban_air_mobility", "campus_air_mobility", "emergency_service", "unknown"]
+                    if cb_data.get("intended_operation") not in valid_ops:
+                        cb_data["intended_operation"] = "unknown"
+                        
                     concept_baseline = ConceptBaseline(**cb_data)
                 except Exception as e:
                     print(f"Warning: Failed to parse concept_baseline: {e}")
