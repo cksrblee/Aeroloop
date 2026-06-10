@@ -29,6 +29,14 @@ class OrchestratorAgent:
                 "status": "failed", 
                 "errors": [{"error": "Max global iterations reached. Mission parameters are unfeasible."}]
             }
+            
+        # 1.5 Handle HITL Routing
+        if status == "paused_for_hitl":
+            return {"next_node": "human_node", "status": "running"}
+            
+        if state.get("human_input") and state.get("awaiting_input_from"):
+            # Return to the agent that requested input
+            return {"next_node": state.get("awaiting_input_from"), "status": "running"}
 
         # 2. Handle Errors / Bidirectional Escapes
         if status == "error" and feedback_history:
@@ -78,14 +86,14 @@ class OrchestratorAgent:
         cert_result = state.get("certification_compliance_result")
         
         if not mission_profile:
-            return {"next_node": "mission_parsing", "status": "running"}
+            return {"next_node": "mission_parsing", "status": "running", "feedback_history": ["Routing to Mission Parsing to establish initial mission profile."]}
             
         if not candidate_reqs:
-            return {"next_node": "customer_requirement", "status": "running"}
+            return {"next_node": "customer_requirement", "status": "running", "feedback_history": ["Routing to Customer Requirement to generate candidate requirements."]}
             
         # Extraction: Retrieve applicable regulations
         if not cert_result:
-            return {"next_node": "certification_compliance", "status": "running"}
+            return {"next_node": "certification_compliance", "status": "running", "feedback_history": ["Routing to Certification Compliance to retrieve applicable regulations."]}
             
         requirement_reasoning_result = state.get("requirement_reasoning_result")
         unresolved_questions = state.get("unresolved_questions", [])
@@ -101,8 +109,9 @@ class OrchestratorAgent:
             return {"next_node": "certification_validator", "status": "running", "feedback_history": ["Validating the reasoned Concept Baseline against the rules."]}
             
         # 4. Certification Quality Routing (Post-Reasoning)
+        force_auto = state.get("full_auto", False)
         quality_report = cert_result.quality_report
-        if quality_report.readiness_level == "needs_human_certification_review":
+        if quality_report.readiness_level == "needs_human_certification_review" and not force_auto:
             return {"next_node": "END", "status": "paused_for_review", "feedback_history": ["Human certification expert review required."]}
         
         # Note: If quality_report.readiness_level == "needs_configuration_detail", 
@@ -122,25 +131,27 @@ class OrchestratorAgent:
             return {
                 "next_node": "sizing", 
                 "status": "running",
-                "sizing_iteration_count": sizing_iters + 1 if sizing_result else sizing_iters
+                "sizing_iteration_count": sizing_iters + 1 if sizing_result else sizing_iters,
+                "feedback_history": ["Routing to Sizing Agent to compute configuration details."]
             }
             
         geo_result = state.get("geometry_design_result")
         if not geo_result or geo_result.status == "failed":
-            return {"next_node": "geometry_design", "status": "running"}
+            return {"next_node": "geometry_design", "status": "running", "feedback_history": ["Routing to Geometry Design to generate 3D baseline."]}
             
         analysis_result = state.get("analysis_result")
         if not analysis_result:
-            return {"next_node": "aerodynamics_analysis", "status": "running"}
+            return {"next_node": "aerodynamics_analysis", "status": "running", "feedback_history": ["Routing to Aerodynamics Analysis to evaluate performance."]}
             
         # 6. Evaluate Simulation Result
         if analysis_result.status == "failed":
             if sizing_iters < self.max_sizing_iters:
+                err_msg = analysis_result.errors[0].message if getattr(analysis_result, "errors", None) else "Unknown error"
                 return {
                     "next_node": "sizing",
                     "status": "running",
                     "sizing_iteration_count": sizing_iters + 1,
-                    "feedback_history": [f"Simulation failed: {analysis_result.error}. Routing back to sizing."]
+                    "feedback_history": [f"Simulation failed: {err_msg}. Routing back to sizing."]
                 }
             else:
                 return {

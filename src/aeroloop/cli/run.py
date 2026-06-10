@@ -1,8 +1,12 @@
 import argparse
 import json
 import os
+import warnings
 from pathlib import Path
 from datetime import datetime
+
+# Suppress LangGraph msgpack serialization warnings for Pydantic objects
+warnings.filterwarnings("ignore", message="Deserializing unregistered type")
 
 from aeroloop.llm.adapters import OpenAIAdapter
 from aeroloop.agents.mission_parsing_agent import MissionParsingAgent
@@ -552,24 +556,54 @@ def run_workflow(args):
     
     print("\n--- Starting Bidirectional Workflow ---")
     try:
-        # We use max_workflow_iterations from config to prevent infinite loops during bidirectional routing
         from aeroloop.config import config
-        graph_config = {"recursion_limit": config.max_workflow_iterations}
-        for s in app.stream(initial_state, config=graph_config):
-            node_name = list(s.keys())[0]
-            print(f"\n[Node Execution: {node_name}]")
-            state_update = s[node_name]
+        from langgraph.types import Command
+        
+        graph_config = {
+            "configurable": {"thread_id": "cli_run_1"},
+            "recursion_limit": config.max_workflow_iterations
+        }
+        
+        stream_input = initial_state
+        
+        while True:
+            for s in app.stream(stream_input, config=graph_config):
+                node_name = list(s.keys())[0]
+                print(f"\n[Node Execution: {node_name}]")
+                state_update = s[node_name]
+                
+                if "status" in state_update:
+                    print(f"  Status: {state_update['status']}")
+                if "next_node" in state_update:
+                    print(f"  Routing -> {state_update['next_node']}")
+                if "feedback_history" in state_update and state_update["feedback_history"]:
+                    label = "Reason" if node_name == "orchestrator" else "Feedback"
+                    print(f"  {label}: {state_update['feedback_history'][-1]}")
+                
+                # Print intermediate results for visibility
+                if "candidate_requirements" in state_update and state_update["candidate_requirements"]:
+                    print(f"  Generated {len(state_update['candidate_requirements'])} candidate requirements.")
             
-            if "status" in state_update:
-                print(f"  Status: {state_update['status']}")
-            if "next_node" in state_update:
-                print(f"  Routing -> {state_update['next_node']}")
-            if "feedback_history" in state_update and state_update["feedback_history"]:
-                print(f"  Feedback: {state_update['feedback_history'][-1]}")
-            
-            # Print intermediate results for visibility
-            if "candidate_requirements" in state_update and state_update["candidate_requirements"]:
-                print(f"  Generated {len(state_update['candidate_requirements'])} candidate requirements.")
+            # Check if graph is paused due to interrupt
+            state_snapshot = app.get_state(graph_config)
+            if state_snapshot.tasks and state_snapshot.tasks[0].interrupts:
+                interrupt_payload = state_snapshot.tasks[0].interrupts[0].value
+                print(f"\n--- [HITL Required: {interrupt_payload.get('awaiting_from')}] ---")
+                
+                if interrupt_payload.get("missing_fields"):
+                    print("Missing Information:")
+                    for mf in interrupt_payload.get("missing_fields", []):
+                        print(f"  - {mf.get('field_name')}: {mf.get('suggested_question')}")
+                        
+                if interrupt_payload.get("unresolved_questions"):
+                    print("Unresolved Questions:")
+                    for q in interrupt_payload.get("unresolved_questions", []):
+                        print(f"  - {q}")
+                        
+                user_reply = input("\n[User] Provide input (or type 'skip'/'auto' to let AI infer): ")
+                stream_input = Command(resume=user_reply)
+            else:
+                break
         
         print("\n[SUCCESS] Workflow execution completed.")
     except Exception as e:

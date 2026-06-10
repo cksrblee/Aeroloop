@@ -1,4 +1,4 @@
-from typing import TypedDict, Annotated
+from typing import TypedDict, Annotated, Any
 import operator
 from aeroloop.schemas.mission import MissionProfile, MissionParsingInput
 from aeroloop.schemas.requirement import CandidateRequirement, FinalRequirement, RequirementConflict, RequirementReasoningResult
@@ -27,6 +27,7 @@ class WorkflowState(TypedDict):
     run_id: str
     raw_input: MissionParsingInput
     mission_profile: MissionProfile | None
+    mission_parsing_result: Any | None
     aircraft_concept: AircraftConcept | None
     certification_compliance_result: CertificationComplianceResult | None
     requirement_reasoning_result: RequirementReasoningResult | None
@@ -51,6 +52,10 @@ class WorkflowState(TypedDict):
     unresolved_questions: list[str] | None
     
     full_auto: bool | None
+    
+    # HITL Control
+    human_input: str | None
+    awaiting_input_from: str | None
     
     # Bidirectional Routing Variables
     feedback_history: Annotated[list[str], add_items]

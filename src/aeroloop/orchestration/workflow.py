@@ -63,20 +63,25 @@ def mission_parsing_node(state: WorkflowState):
         registry = TraceabilityRegistry()
     
     try:
-        force_auto = state.get("full_auto", False)
+        previous_result = state.get("mission_parsing_result")
+        human_input = state.get("human_input")
         print(f"\n[MissionParsingAgent] Extracting mission profile and constraints (Run ID: {run_id})...")
-        result = mission_agent.parse(raw_input, force_auto=force_auto)
+        result = mission_agent.parse(raw_input, previous_result=previous_result, human_input=human_input)
         if result.missing_fields:
-            # If there are missing fields, it routes back with an error
+            # If there are missing fields, pause for HITL
             return {
                 "mission_profile": result.mission_profile,
-                "status": "error",
-                "feedback_history": [f"Missing mission fields: {[mf.field_name for mf in result.missing_fields]}"]
+                "mission_parsing_result": result,
+                "status": "paused_for_hitl",
+                "awaiting_input_from": "mission_parsing"
             }
         
         dump_intermediate_result(run_id, "mission_parsing_result.json", result)
         return {
             "mission_profile": result.mission_profile,
+            "mission_parsing_result": result,
+            "human_input": None, # Clear it out
+            "awaiting_input_from": None,
             "run_id": run_id,
             "traceability_registry": registry,
             "status": "running"
@@ -165,9 +170,10 @@ def requirement_reasoning_node(state: WorkflowState):
         unresolved_questions=unresolved_questions
     )
     
-    force_auto = state.get("full_auto", False)
+    previous_result = state.get("requirement_reasoning_result")
+    human_input = state.get("human_input")
     print(f"\n[RequirementReasoningAgent] Resolving conflicts and synthesizing final requirements (Run ID: {run_id})...")
-    result = reasoning_agent.refine(req, force_auto=force_auto)
+    result = reasoning_agent.refine(req, previous_result=previous_result, human_input=human_input)
     
     # Store TraceLinks to Registry
     registry = state.get("traceability_registry")
@@ -179,13 +185,18 @@ def requirement_reasoning_node(state: WorkflowState):
     new_unresolved = result.remaining_unresolved_questions
     
     dump_intermediate_result(run_id, "requirement_reasoning_result.json", result)
+    
+    status = "paused_for_hitl" if new_unresolved else "running"
+    
     return {
         "requirement_reasoning_result": result,
         "aircraft_concept": result.concept_baseline,
         "final_requirements": result.final_requirements, # Feed final back into state for Sizing
         "unresolved_questions": new_unresolved,
         "traceability_registry": registry,
-        "status": "running" if not new_unresolved else "paused_for_hitl"
+        "status": status,
+        "awaiting_input_from": "requirement_reasoning" if new_unresolved else None,
+        "human_input": None if not new_unresolved else human_input # clear when done
     }
 
 def certification_validator_node(state: WorkflowState):
@@ -339,7 +350,7 @@ def aerodynamics_analysis_node(state: WorkflowState):
     from aeroloop.schemas.aerodynamics import AerodynamicsAnalysisRequest
     
     geo_result = state.get("geometry_design_result")
-    if not geo_result or not geo_result.geometry_vsp3_path:
+    if not geo_result or not geo_result.geometry_artifacts or not geo_result.geometry_artifacts.vsp3_file_path:
         return {"status": "error", "feedback_history": ["Missing geometry_design_result for simulation"]}
         
     from aeroloop.schemas.aerodynamics import AeroAnalysisConfig, AircraftCandidate, GeometryArtifacts
@@ -361,7 +372,7 @@ def aerodynamics_analysis_node(state: WorkflowState):
             template_id="TPL-001"
         ),
         geometry_artifacts=GeometryArtifacts(
-            vsp3_file_path=geo_result.geometry_vsp3_path
+            vsp3_file_path=geo_result.geometry_artifacts.vsp3_file_path
         ),
         analysis_config=AeroAnalysisConfig(
             analysis_backend="openvsp_vspaero",
@@ -382,10 +393,11 @@ def aerodynamics_analysis_node(state: WorkflowState):
         return {"status": "error", "feedback_history": ["Analysis failed to return a result."]}
         
     # We can pass success back or error back. The orchestrator agent handles cyclic routing.
+    err_msg = analysis_result.errors[0].message if getattr(analysis_result, "errors", None) else "Unknown error"
     return {
         "analysis_result": analysis_result,
         "status": "error" if analysis_result.status == "failed" else "running",
-        "feedback_history": [f"Simulation failed: {analysis_result.error}"] if analysis_result.status == "failed" else []
+        "feedback_history": [f"Simulation failed: {err_msg}"] if analysis_result.status == "failed" else []
     }
 
 def orchestrator_node(state: WorkflowState):
@@ -393,6 +405,46 @@ def orchestrator_node(state: WorkflowState):
 
 def route_from_orchestrator(state: WorkflowState):
     return orchestrator_agent.route_edge(state)
+
+def human_node(state: WorkflowState):
+    from langgraph.types import interrupt
+    full_auto = state.get("full_auto", False)
+    awaiting_from = state.get("awaiting_input_from")
+    
+    print(f"\n[HumanNode] Awaiting input for: {awaiting_from}")
+    
+    if full_auto:
+        print("[HumanNode] Full-auto mode active. Simulating user response...")
+        if awaiting_from == "mission_parsing":
+            user_reply = "skip"
+        elif awaiting_from == "requirement_reasoning":
+            user_reply = "auto"
+        else:
+            user_reply = "continue"
+    else:
+        # Build payload for interrupt
+        missing_fields = []
+        if awaiting_from == "mission_parsing" and state.get("mission_parsing_result"):
+            missing_fields = [mf.model_dump() for mf in state["mission_parsing_result"].missing_fields]
+        unresolved = []
+        if awaiting_from == "requirement_reasoning":
+            unresolved = state.get("unresolved_questions", [])
+            
+        interrupt_payload = {
+            "type": "needs_human_input",
+            "awaiting_from": awaiting_from,
+            "missing_fields": missing_fields,
+            "unresolved_questions": unresolved
+        }
+        
+        # Pause execution using LangGraph 1.2.0 interrupt
+        print(f"\n[HumanNode] Suspending graph execution for HITL...")
+        user_reply = interrupt(interrupt_payload)
+        
+    return {
+        "human_input": user_reply,
+        "status": "running"
+    }
 
 def create_workflow():
     """
@@ -409,6 +461,7 @@ def create_workflow():
     workflow.add_node("sizing", sizing_node)
     workflow.add_node("geometry_design", geometry_design_node)
     workflow.add_node("aerodynamics_analysis", aerodynamics_analysis_node)
+    workflow.add_node("human_node", human_node)
     workflow.add_node("orchestrator", orchestrator_node)
     
     # All agent nodes route back to the orchestrator to decide the next step
@@ -420,6 +473,7 @@ def create_workflow():
     workflow.add_edge("sizing", "orchestrator")
     workflow.add_edge("geometry_design", "orchestrator")
     workflow.add_edge("aerodynamics_analysis", "orchestrator")
+    workflow.add_edge("human_node", "orchestrator")
     
     # Initial edge routes to orchestrator which will decide what to do
     workflow.add_edge(START, "orchestrator")
@@ -437,8 +491,11 @@ def create_workflow():
             "sizing": "sizing",
             "geometry_design": "geometry_design",
             "aerodynamics_analysis": "aerodynamics_analysis",
+            "human_node": "human_node",
             "END": END
         }
     )
     
-    return workflow.compile()
+    from langgraph.checkpoint.memory import MemorySaver
+    memory = MemorySaver()
+    return workflow.compile(checkpointer=memory)

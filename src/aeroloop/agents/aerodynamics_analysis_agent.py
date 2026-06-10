@@ -81,6 +81,9 @@ class AerodynamicsAnalysisAgent(BaseAIAgent):
                 result.mass_properties = mass_result
                 if mass_result.warnings:
                     result.warnings.extend(mass_result.warnings)
+                    
+                if not mass_result.mass_analysis_available:
+                    result.errors.append(ErrorInfo(error_id="MASS_PROPS_FAILED", module_name="AerodynamicsAnalysisAgent", message="Mass properties computation failed or returned empty results.", recoverable=False))
             
             if request.analysis_config.run_vspaero:
                 # 4. Compute Geometry

@@ -1,5 +1,13 @@
 from typing import Any, Dict, List
 import json
+
+try:
+    from langfuse.decorators import observe
+except ImportError:
+    def observe(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
 from aeroloop.agents.base_agent import BaseAIAgent
 from aeroloop.schemas.requirement import (
     RequirementReasoningInput, 
@@ -34,6 +42,8 @@ class RequirementReasoningAgent(BaseAIAgent):
         """
         Merges candidate requirements, detects conflicts, and resolves them.
         """
+    @observe()
+    def refine(self, request: RequirementReasoningInput, previous_result: RequirementReasoningResult = None, human_input: str = None) -> RequirementReasoningResult:
         if not self.llm_model:
             return self._fail_result(request, "LLM model not provided")
 
@@ -44,48 +54,33 @@ class RequirementReasoningAgent(BaseAIAgent):
                 res = self.kb.search_similar_requirements(q, n_results=2)
                 kb_context[q] = res
 
-        prompt = self._build_prompt(request, kb_context)
-        
         try:
-            max_iterations = 3
-            response_json = {}
-            for iteration in range(max_iterations):
-                print(f"\n[RequirementReasoningAgent] Reasoning... (Iteration {iteration + 1}/{max_iterations})")
-                response_text = self.llm_model.generate(prompt)
-                
-                # Find JSON block
-                start = response_text.find("{")
-                end = response_text.rfind("}")
-                if start != -1 and end != -1:
-                    response_json = json.loads(response_text[start:end+1])
+            print(f"\n[RequirementReasoningAgent] Reasoning... ")
+            prompt = self._build_prompt(request, kb_context)
+            
+            if previous_result and human_input:
+                rem_q = previous_result.remaining_unresolved_questions
+                if human_input.strip().lower() == 'auto':
+                    prompt += f"\n\nAssistant previously returned unresolved questions: {rem_q}\n\nSystem: The user chose to auto-infer. You MUST force auto-inference for ALL of these. Do NOT leave them in remaining_unresolved_questions. Make bold assumptions and put them in resolved_assumptions."
                 else:
-                    raise ValueError("No JSON object found in response.")
+                    prompt += f"\n\nAssistant previously returned unresolved questions: {rem_q}\n\nUser answered: {human_input}\n\nPlease update the final_requirements and resolved_assumptions based on this."
 
-                rem_q = response_json.get("remaining_unresolved_questions", [])
-                
-                if not rem_q:
-                    # All resolved automatically
-                    break
-                    
-                if iteration == max_iterations - 1:
-                    break
-                    
-                print(f"\n[RequirementReasoningAgent] ⚠️ Needs HITL! Unresolved questions ({len(rem_q)}):")
-                for q in rem_q:
-                    print(f"  - {q}")
-                    
-                if force_auto:
-                    user_answer = 'auto'
-                    print(f"\n[RequirementReasoningAgent] Running in full-auto mode. Forcing LLM inference for {len(rem_q)} questions...")
-                else:
-                    user_answer = input("\n[User] Provide answers (or type 'auto' to force LLM inference): ")
-                
-                if user_answer.strip().lower() == 'auto':
-                    print("\n[RequirementReasoningAgent] Forcing LLM to automatically infer missing details...")
-                    prompt += f"\n\nAssistant returned unresolved questions: {rem_q}\n\nSystem: The user refused to answer. You MUST force auto-inference for ALL of these. Do NOT leave them in remaining_unresolved_questions. Make bold assumptions and put them in resolved_assumptions."
-                else:
-                    prompt += f"\n\nAssistant returned unresolved questions: {rem_q}\n\nUser answered: {user_answer}\n\nPlease update the final_requirements and resolved_assumptions based on this."
+            response_text = self.llm_model.generate(prompt)
+            
+            # Extract JSON block
+            start = response_text.find("{")
+            end = response_text.rfind("}")
+            if start != -1 and end != -1:
+                response_json = json.loads(response_text[start:end+1])
+            else:
+                raise ValueError("No JSON object found in response.")
 
+            # Programmatic safeguard for auto mode
+            rem_q = response_json.get("remaining_unresolved_questions", [])
+            if previous_result and human_input and human_input.strip().lower() == 'auto' and rem_q:
+                print("\n[RequirementReasoningAgent] Warning: LLM left unresolved questions despite auto mode. Forcing clear.")
+                response_json["remaining_unresolved_questions"] = []
+                
             # Construct final requirements
             final_reqs = []
             for r in response_json.get("final_requirements", []):

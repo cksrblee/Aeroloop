@@ -62,20 +62,13 @@ The output must strictly follow the schema structure provided.
 
 
     @observe()
-    def parse(self, raw_input: MissionParsingInput, force_auto: bool = False) -> MissionParsingResult:
+    def parse(self, raw_input: MissionParsingInput, previous_result: MissionParsingResult = None, human_input: str = None) -> MissionParsingResult:
         """
         Extracts explicit mission facts from the user's natural language mission description.
-        
-        Args:
-            raw_input (MissionParsingInput): Natural language mission input data
-            
-        Returns:
-            MissionParsingResult: Result object containing the structured mission profile, extracted facts, missing fields, and assumptions
         """
         # 1. Fetch LLM prompt
         try:
             prompt_template = self.prompt_provider.get_prompt("aeroloop/mission-parsing-agent", label="staging")
-            # If using Langfuse, you might compile the prompt here. For now, we fallback to a strong default.
             system_prompt = self._build_default_prompt()
         except Exception:
             system_prompt = self._build_default_prompt()
@@ -84,81 +77,43 @@ The output must strictly follow the schema structure provided.
         if raw_input.user_context:
             user_content += f"User Context: {json.dumps(raw_input.user_context, ensure_ascii=False)}\n"
         
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content}
-        ]
+        system_msg = {"role": "system", "content": system_prompt}
+        user_msg = {"role": "user", "content": user_content}
+        
+        messages = [system_msg, user_msg]
 
         if not self.llm_model:
             raise ValueError("LLM model is not configured for MissionParsingAgent.")
 
-        # 2. Call LLM to get structured response
-        max_iterations = 5
-        for iteration in range(max_iterations):
-            try:
-                print(f"\n[MissionParsingAgent] Analyzing mission (Iteration {iteration + 1}/{max_iterations}). Please wait...")
-                result = self.llm_model.generate_structured(messages, MissionParsingResult)
-                
-                # Ensure the input references match
-                if result.mission_id != raw_input.mission_id:
-                    result.mission_id = raw_input.mission_id
-                if result.raw_input != raw_input.raw_user_input:
-                    result.raw_input = raw_input.raw_user_input
-                
-                # If there are no missing fields, we're done
-                if not result.missing_fields:
-                    return result
-                
-                # If there are missing fields, ask the user interactively
-                print(f"\n[MissionParsingAgent] Missing information detected ({len(result.missing_fields)} fields).")
-                for mf in result.missing_fields:
-                    print(f"  - {mf.field_name}: {mf.suggested_question}")
-                
-                if force_auto:
-                    user_answer = 'skip'
-                    print("\n[MissionParsingAgent] Running in full-auto mode. Forcing LLM to infer missing info...")
-                else:
-                    user_answer = input("\n[User] Provide missing info (or type 'skip' to ignore): ")
-                
-                if user_answer.strip().lower() == 'skip':
-                    print("\n[MissionParsingAgent] User skipped. Inferring missing information...")
-                    messages.append({
-                        "role": "assistant",
-                        "content": result.model_dump_json()
-                    })
-                    messages.append({
-                        "role": "system",
-                        "content": "The user has chosen to skip providing the missing information. You MUST now INFER the most likely reasonable default values for all missing fields based on standard domain knowledge (e.g. Urban Air Mobility, eVTOL operations). Populate the missing fields in the mission_profile, completely empty the missing_fields list (return an empty array []), and create a corresponding Assumption object for each inferred field stating the assumed value and reason."
-                    })
-                    result = self.llm_model.generate_structured(messages, MissionParsingResult)
-                    if result.mission_id != raw_input.mission_id:
-                        result.mission_id = raw_input.mission_id
-                    if result.raw_input != raw_input.raw_user_input:
-                        result.raw_input = raw_input.raw_user_input
-                    
-                    # Programmatic safeguard: if LLM still populated missing_fields despite the instruction,
-                    # we force it to be empty so the workflow can proceed.
-                    if result.missing_fields:
-                        print("\n[MissionParsingAgent] Warning: LLM did not empty missing_fields. Forcing it to be empty to proceed.")
-                        result.missing_fields = []
-                        
-                    return result
-                
-                # Append assistant's last state and user's answer to messages
+        if previous_result and human_input:
+            messages.append({
+                "role": "assistant",
+                "content": previous_result.model_dump_json()
+            })
+            if human_input.strip().lower() == 'skip':
                 messages.append({
-                    "role": "assistant",
-                    "content": result.model_dump_json()
+                    "role": "system",
+                    "content": "The user has chosen to skip providing the missing information. You MUST now INFER the most likely reasonable default values for all missing fields based on standard domain knowledge (e.g. Urban Air Mobility, eVTOL operations). Populate the missing fields in the mission_profile, completely empty the missing_fields list (return an empty array []), and create a corresponding Assumption object for each inferred field stating the assumed value and reason."
                 })
+            else:
                 messages.append({
                     "role": "user",
-                    "content": f"Here is the missing information: {user_answer}"
+                    "content": human_input
                 })
                 
-            except Exception as e:
-                # Fallback or re-raise
-                raise RuntimeError(f"Failed to parse mission using LLM: {str(e)}")
+        result = self.llm_model.generate_structured(messages, MissionParsingResult)
         
-        # If max_iterations is reached, return whatever we have
+        # Ensure the input references match
+        if result.mission_id != raw_input.mission_id:
+            result.mission_id = raw_input.mission_id
+        if result.raw_input != raw_input.raw_user_input:
+            result.raw_input = raw_input.raw_user_input
+        
+        # Programmatic safeguard
+        if previous_result and human_input and human_input.strip().lower() == 'skip' and result.missing_fields:
+            print("\n[MissionParsingAgent] Warning: LLM did not empty missing_fields. Forcing it to be empty to proceed.")
+            result.missing_fields = []
+            
         return result
 
     def run(self, state: Dict[str, Any]) -> Dict[str, Any]:

@@ -30,7 +30,7 @@ def mock_get_all_data_names(res_id):
     if "History" in res_id or "Polar" in res_id:
         return ["Alpha", "Mach", "CL", "CDtot", "CMy"]
     if "Mass_Properties" in res_id:
-        return ["Total_Mass", "CG_X", "CG_Y", "CG_Z", "Ixx", "Iyy", "Izz"]
+        return ["Total_Mass", "Total_CG", "Total_Ixx", "Total_Iyy", "Total_Izz"]
     return []
 mock_vsp.GetAllDataNames.side_effect = mock_get_all_data_names
 
@@ -45,15 +45,23 @@ def mock_get_double_results(res_id, data_name, *args):
     
     # Mass Properties
     if data_name == "Total_Mass": return [1200.5]
-    if data_name == "CG_X": return [3.2]
-    if data_name == "CG_Y": return [0.0]
-    if data_name == "CG_Z": return [1.1]
-    if data_name == "Ixx": return [5000.0]
-    if data_name == "Iyy": return [8000.0]
-    if data_name == "Izz": return [11000.0]
+    if data_name == "Total_Ixx": return [5000.0]
+    if data_name == "Total_Iyy": return [8000.0]
+    if data_name == "Total_Izz": return [11000.0]
     
     return [0.0]
 mock_vsp.GetDoubleResults.side_effect = mock_get_double_results
+
+# Mock GetVec3dResults
+def mock_get_vec3d_results(res_id, data_name, *args):
+    class MockVec3d:
+        def x(self): return 3.2
+        def y(self): return 0.0
+        def z(self): return 1.1
+    if data_name == "Total_CG":
+        return [MockVec3d()]
+    return [MockVec3d()]
+mock_vsp.GetVec3dResults.side_effect = mock_get_vec3d_results
 
 sys.modules["openvsp"] = mock_vsp
 
