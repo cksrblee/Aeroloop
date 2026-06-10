@@ -90,19 +90,17 @@ class AerodynamicsAnalysisAgent(BaseAIAgent):
                 out_dir = request.output_directory
                 os.makedirs(out_dir, exist_ok=True)
                 
-                # Copy VSP3 file to out_dir so OpenVSP generates output files here
-                local_vsp3_path = os.path.join(out_dir, os.path.basename(vsp3_path))
+                # Create a unique VSP3 file in the current working directory to avoid CWD changes
+                local_vsp3_basename = f"{request.candidate_id}_{uuid.uuid4().hex[:6]}.vsp3"
+                local_vsp3_path = os.path.join(os.getcwd(), local_vsp3_basename)
                 import shutil
                 shutil.copy2(vsp3_path, local_vsp3_path)
                 
-                # Reload the VSP3 from the new location so its base path becomes out_dir
+                # Reload the VSP3 from the new location
                 runner.load_or_generate_vsp3(local_vsp3_path)
                 
                 log_file = os.path.join(out_dir, "vspaero.log")
-                
-                # Change CWD so vspaero binary (if it relies on CWD) and our parser look in out_dir
-                old_cwd = os.getcwd()
-                os.chdir(out_dir)
+                parsed_data = {}
                 
                 try:
                     # 4. Compute Geometry
@@ -115,35 +113,31 @@ class AerodynamicsAnalysisAgent(BaseAIAgent):
                         speed_val = speed[0] if isinstance(speed, list) else speed
                         mach_num = speed_val / 340.0
                         
-                    base_name = os.path.basename(local_vsp3_path).replace(".vsp3", "")
+                    base_name = local_vsp3_basename.replace(".vsp3", "")
                     
-                    print("\n[AerodynamicsAnalysisAgent] Starting VSPAERO Solver... (OpenVSP blocking, please wait or tail the .history file in another terminal)")
+                    print("\n[AerodynamicsAnalysisAgent] Generating VSPAERO input files and launching solver via subprocess...")
                     
-                    import signal
-                    # OpenVSP C++ waitpid() hangs if Python's asyncio/multiprocessing intercepts SIGCHLD
-                    try:
-                        old_handler = signal.signal(signal.SIGCHLD, signal.SIG_DFL)
-                    except Exception:
-                        old_handler = None
-                        
-                    try:
-                        sweep_res_id = runner.run_vspaero_sweep(
-                            alpha_range=request.analysis_config.angle_of_attack_deg,
-                            mach_range=[mach_num],
-                            geom_set=0,
-                            wing_id=wing_id,
-                            redirect_file=log_file
-                        )
-                    finally:
-                        if old_handler is not None:
-                            signal.signal(signal.SIGCHLD, old_handler)
+                    sweep_res_id = runner.run_vspaero_sweep(
+                        alpha_range=request.analysis_config.angle_of_attack_deg,
+                        mach_range=[mach_num],
+                        geom_set=0,
+                        wing_id=wing_id,
+                        redirect_file=log_file,
+                        base_name=base_name
+                    )
                     
                     runner.run_vsploads(base_name=base_name, cwd=".")
                         
                     # 6. Parse Results
                     parsed_data = parse_vspaero_results(runner.vsp, sweep_res_id, cwd=".")
                 finally:
-                    os.chdir(old_cwd)
+                    # Move all generated files to out_dir
+                    import glob
+                    for f in glob.glob(f"{base_name}*"):
+                        try:
+                            shutil.move(f, os.path.join(out_dir, os.path.basename(f)))
+                        except Exception:
+                            pass
                         
                     result.aerodynamic_coefficients = parsed_data.get("coefficients", [])
                     

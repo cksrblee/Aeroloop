@@ -17,27 +17,42 @@ def parse_vspaero_results(vsp, sweep_res_id: str, case_prefix: str = "AERO-CASE"
     }
     
     # Extract History Data (CL, CDtot, CMy, etc.)
-    history_id = vsp.FindLatestResultsID("VSPAERO_History")
-    if history_id:
-        data_names = vsp.GetAllDataNames(history_id)
-        
-        # Typically History contains Alpha, Beta, Mach, CL, CDtot, CMy, etc.
-        # Note: Depending on OpenVSP version, polar might be in VSPAERO_Polar.
-        # We will check VSPAERO_Polar first if available, else fallback to History for final values.
-        
-        source_id = history_id
-        polar_id = vsp.FindLatestResultsID("VSPAERO_Polar")
-        if polar_id:
-            source_id = polar_id
-            data_names = vsp.GetAllDataNames(polar_id)
-            
+    # Since we bypassed ExecAnalysis to avoid waitpid hangs, Results Manager might not have VSPAERO_History.
+    # We parse the .history file manually from disk.
+    history_files = glob.glob(os.path.join(cwd, "*.history"))
+    if history_files:
+        history_file = max(history_files, key=os.path.getmtime)
         try:
-            alpha = list(vsp.GetDoubleResults(source_id, "Alpha", 0)) if "Alpha" in data_names else []
-            mach = list(vsp.GetDoubleResults(source_id, "Mach", 0)) if "Mach" in data_names else []
-            cl = list(vsp.GetDoubleResults(source_id, "CL", 0)) if "CL" in data_names else []
-            cd = list(vsp.GetDoubleResults(source_id, "CDtot", 0)) if "CDtot" in data_names else []
-            cm = list(vsp.GetDoubleResults(source_id, "CMy", 0)) if "CMy" in data_names else []
+            with open(history_file, 'r') as f:
+                lines = f.readlines()
             
+            cases = []
+            current_case = []
+            
+            # Look for lines that contain integers in the first column
+            for line in lines:
+                parts = line.strip().split()
+                if not parts:
+                    continue
+                try:
+                    iter_num = int(parts[0])
+                    current_case.append(parts)
+                except ValueError:
+                    if current_case:
+                        cases.append(current_case)
+                        current_case = []
+            if current_case:
+                cases.append(current_case)
+                
+            alpha, mach, cl, cd, cm = [], [], [], [], []
+            for case in cases:
+                last_row = case[-1] # The converged iteration for this case
+                mach.append(float(last_row[1]))
+                alpha.append(float(last_row[2]))
+                cl.append(float(last_row[6]))
+                cd.append(float(last_row[9]))
+                cm.append(float(last_row[22]))
+                
             # Store raw
             parsed_data["raw"]["Alpha"] = alpha
             parsed_data["raw"]["Mach"] = mach
@@ -47,10 +62,10 @@ def parse_vspaero_results(vsp, sweep_res_id: str, case_prefix: str = "AERO-CASE"
             
             # Assemble coefficients cases
             for i in range(len(alpha)):
-                case = AerodynamicCoefficientCase(
+                c = AerodynamicCoefficientCase(
                     case_id=f"{case_prefix}-{i+1}",
                     alpha_deg=alpha[i],
-                    beta_deg=0.0, # Placeholder if beta sweep not parsed
+                    beta_deg=0.0,
                     speed_mps=None,
                     altitude_m=None,
                     cl=cl[i] if i < len(cl) else None,
@@ -58,13 +73,13 @@ def parse_vspaero_results(vsp, sweep_res_id: str, case_prefix: str = "AERO-CASE"
                     cm=cm[i] if i < len(cm) else None,
                     source="vspaero_result"
                 )
-                parsed_data["coefficients"].append(case)
+                parsed_data["coefficients"].append(c)
                 
         except Exception as e:
-            parsed_data["warnings"].append(f"Failed to parse VSPAERO results: {e}")
+            parsed_data["warnings"].append(f"Failed to parse manually generated VSPAERO .history file: {e}")
             
     else:
-        parsed_data["warnings"].append("No VSPAERO_History or VSPAERO_Polar found in Results Manager.")
+        parsed_data["warnings"].append("No .history file found in working directory.")
 
     # Optionally extract spanwise load data
     load_id = vsp.FindLatestResultsID("VSPAERO_Load")
