@@ -119,6 +119,13 @@ class AerodynamicsAnalysisAgent(BaseAIAgent):
                     
                     print("\n[AerodynamicsAnalysisAgent] Starting VSPAERO Solver... (OpenVSP blocking, please wait or tail the .history file in another terminal)")
                     
+                    import signal
+                    # OpenVSP C++ waitpid() hangs if Python's asyncio/multiprocessing intercepts SIGCHLD
+                    try:
+                        old_handler = signal.signal(signal.SIGCHLD, signal.SIG_DFL)
+                    except Exception:
+                        old_handler = None
+                        
                     try:
                         sweep_res_id = runner.run_vspaero_sweep(
                             alpha_range=request.analysis_config.angle_of_attack_deg,
@@ -127,8 +134,9 @@ class AerodynamicsAnalysisAgent(BaseAIAgent):
                             wing_id=wing_id,
                             redirect_file=log_file
                         )
-                    except Exception as e:
-                        raise e
+                    finally:
+                        if old_handler is not None:
+                            signal.signal(signal.SIGCHLD, old_handler)
                     
                     runner.run_vsploads(base_name=base_name, cwd=".")
                         
