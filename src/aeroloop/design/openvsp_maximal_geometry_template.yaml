@@ -620,7 +620,7 @@ export_options:
       file_suffix: ".stl"
       export_constant: "EXPORT_STL"
     obj:
-      enabled: false
+      enabled: true
       file_suffix: ".obj"
       export_constant: "EXPORT_OBJ"
     step:

@@ -14,7 +14,7 @@ from aeroloop.gui.components.visualization import plot_aerodynamics_polar, plot_
 def run_workflow_stream(mission_text: str, full_auto: bool):
     """Generator to run the workflow and yield Gradio UI updates."""
     if not mission_text.strip():
-        yield ("Error: Mission text cannot be empty.", "", gr.update(), gr.update(), gr.update())
+        yield ("Error: Mission text cannot be empty.", "", gr.update(), gr.update(), gr.update(), "")
         return
 
     # 1. Initialize LangGraph Workflow
@@ -44,14 +44,14 @@ def run_workflow_stream(mission_text: str, full_auto: bool):
     # 2. Stream events
     try:
         while True:
-            for s in app.stream(stream_input, config=graph_config):
+            for s in app.stream(stream_input, config=graph_config, stream_mode="updates"):
                 # Format tracing event
                 new_trace = format_trace_event(s)
                 if new_trace:
                     trace_log += new_trace + "\n"
                 
                 # Yield intermediate state
-                yield (trace_log, conflict_msg, gr.update(), gr.update(), run_id)
+                yield (trace_log, conflict_msg, gr.update(), gr.update(), gr.update(), run_id)
                 
             # Check for interrupts
             state_snapshot = app.get_state(graph_config)
@@ -71,7 +71,7 @@ def run_workflow_stream(mission_text: str, full_auto: bool):
                 
                 conflict_msg = "\n".join(conflict_lines)
                 trace_log += f"\n>> Graph Paused for Human-in-the-Loop ({interrupt_payload.get('awaiting_from')})\n"
-                yield (trace_log, conflict_msg, gr.update(), gr.update(), run_id)
+                yield (trace_log, conflict_msg, gr.update(), gr.update(), gr.update(), run_id)
                 return # Stop generator, wait for user input
             else:
                 break
@@ -81,27 +81,39 @@ def run_workflow_stream(mission_text: str, full_auto: bool):
         conflict_msg = "Workflow Complete."
         
         # Load visualizations if available
-        polar_path = config.get_run_dir(run_id) / "aerodynamics_output" / "Unnamed.polar"
-        csv_path = config.get_run_dir(run_id) / "geometry_output" / "Unnamed_CompGeom.csv"
+        aero_dir = config.get_run_dir(run_id) / "aerodynamics_output"
+        geo_dir = config.get_run_dir(run_id) / "geometry_output"
+        
+        polar_files = list(aero_dir.glob("*.polar"))
+        csv_files = list(geo_dir.glob("*_CompGeom.csv"))
+        
+        # Prefer OBJ format for better rendering in Gradio Model3D
+        model_files = list(geo_dir.glob("*.obj")) or list(geo_dir.glob("*.stl"))
+        
+        polar_path = str(polar_files[-1]) if polar_files else ""
+        csv_path = str(csv_files[-1]) if csv_files else ""
+        model_path = str(model_files[-1]) if model_files else None
         
         fig_polar = plot_aerodynamics_polar(str(polar_path))
         fig_geo = plot_geometry_areas(str(csv_path))
         
-        yield (trace_log, conflict_msg, fig_polar, fig_geo, run_id)
+        yield (trace_log, conflict_msg, fig_polar, fig_geo, model_path, run_id)
         
     except Exception as e:
-        trace_log += f"\n[ERROR] Workflow failed: {e}\n"
+        import traceback
+        err_msg = traceback.format_exc()
+        trace_log += f"\n[ERROR] Workflow failed: {e}\n{err_msg}\n"
         conflict_msg = f"Critical Error: {e}"
-        yield (trace_log, conflict_msg, gr.update(), gr.update(), run_id)
+        yield (trace_log, conflict_msg, gr.update(), gr.update(), gr.update(), run_id)
 
 def provide_hitl_input(user_reply: str, run_id: str, current_trace: str):
     """Resume the workflow from a HITL interrupt."""
     if not user_reply.strip():
-        yield (current_trace, "Error: User reply empty.", gr.update(), gr.update(), run_id)
+        yield (current_trace, "Error: User reply empty.", gr.update(), gr.update(), gr.update(), run_id)
         return
         
     if not run_id:
-        yield (current_trace, "Error: No active run_id.", gr.update(), gr.update(), run_id)
+        yield (current_trace, "Error: No active run_id.", gr.update(), gr.update(), gr.update(), run_id)
         return
         
     app = create_workflow()
@@ -114,16 +126,16 @@ def provide_hitl_input(user_reply: str, run_id: str, current_trace: str):
     trace_log = current_trace + f"\n>> User Input Provided: {user_reply}\n"
     conflict_msg = "Resuming Workflow..."
     
-    yield (trace_log, conflict_msg, gr.update(), gr.update(), run_id)
+    yield (trace_log, conflict_msg, gr.update(), gr.update(), gr.update(), run_id)
     
     # Run the rest
     try:
         while True:
-            for s in app.stream(stream_input, config=graph_config):
+            for s in app.stream(stream_input, config=graph_config, stream_mode="updates"):
                 new_trace = format_trace_event(s)
                 if new_trace:
                     trace_log += new_trace + "\n"
-                yield (trace_log, conflict_msg, gr.update(), gr.update(), run_id)
+                yield (trace_log, conflict_msg, gr.update(), gr.update(), gr.update(), run_id)
                 
             state_snapshot = app.get_state(graph_config)
             if state_snapshot.tasks and state_snapshot.tasks[0].interrupts:
@@ -134,7 +146,7 @@ def provide_hitl_input(user_reply: str, run_id: str, current_trace: str):
                         conflict_lines.append(f"  - {q}")
                 conflict_msg = "\n".join(conflict_lines)
                 trace_log += f"\n>> Graph Paused for Human-in-the-Loop ({interrupt_payload.get('awaiting_from')})\n"
-                yield (trace_log, conflict_msg, gr.update(), gr.update(), run_id)
+                yield (trace_log, conflict_msg, gr.update(), gr.update(), gr.update(), run_id)
                 return
             else:
                 break
@@ -144,18 +156,30 @@ def provide_hitl_input(user_reply: str, run_id: str, current_trace: str):
         conflict_msg = "Workflow Complete."
         
         # Load visualizations if available
-        polar_path = config.get_run_dir(run_id) / "aerodynamics_output" / "Unnamed.polar"
-        csv_path = config.get_run_dir(run_id) / "geometry_output" / "Unnamed_CompGeom.csv"
+        aero_dir = config.get_run_dir(run_id) / "aerodynamics_output"
+        geo_dir = config.get_run_dir(run_id) / "geometry_output"
+        
+        polar_files = list(aero_dir.glob("*.polar"))
+        csv_files = list(geo_dir.glob("*_CompGeom.csv"))
+        
+        # Prefer OBJ format for better rendering in Gradio Model3D
+        model_files = list(geo_dir.glob("*.obj")) or list(geo_dir.glob("*.stl"))
+        
+        polar_path = str(polar_files[-1]) if polar_files else ""
+        csv_path = str(csv_files[-1]) if csv_files else ""
+        model_path = str(model_files[-1]) if model_files else None
         
         fig_polar = plot_aerodynamics_polar(str(polar_path))
         fig_geo = plot_geometry_areas(str(csv_path))
         
-        yield (trace_log, conflict_msg, fig_polar, fig_geo, run_id)
+        yield (trace_log, conflict_msg, fig_polar, fig_geo, model_path, run_id)
         
     except Exception as e:
-        trace_log += f"\n[ERROR] Workflow failed: {e}\n"
+        import traceback
+        err_msg = traceback.format_exc()
+        trace_log += f"\n[ERROR] Workflow failed: {e}\n{err_msg}\n"
         conflict_msg = f"Critical Error: {e}"
-        yield (trace_log, conflict_msg, gr.update(), gr.update(), run_id)
+        yield (trace_log, conflict_msg, gr.update(), gr.update(), gr.update(), run_id)
 
 
 def build_app() -> gr.Blocks:
@@ -186,13 +210,13 @@ def build_app() -> gr.Blocks:
                 hitl_input = gr.Textbox(lines=2, placeholder="Type response here or 'skip'...", label="User Reply")
                 hitl_btn = gr.Button("Submit Reply")
                 
-                # Hidden state for run_id
-                current_run_id = gr.State("")
+                # Visible state for run_id
+                current_run_id = gr.Textbox(label="Current RUN_ID", interactive=False)
                 
             with gr.Column(scale=2):
                 gr.Markdown("### Agent Tracing Telemetry")
                 trace_log = gr.TextArea(
-                    lines=15, 
+                    lines=50, 
                     label="Live Graph Execution", 
                     interactive=False,
                     elem_id="tracing-box"
@@ -206,17 +230,23 @@ def build_app() -> gr.Blocks:
                 gr.Markdown("### Geometry Visualizer")
                 geo_plot = gr.Plot(label="Wetted Areas")
                 
+        with gr.Row():
+            with gr.Column():
+                gr.Markdown("### 3D Aircraft Viewer")
+                # Dark slate gray background for premium contrast
+                model_viewer = gr.Model3D(label="3D Model (.obj/.stl)", clear_color=[0.1, 0.1, 0.12, 1.0])
+                
         # Wiring
         start_btn.click(
             fn=run_workflow_stream,
             inputs=[mission_input, full_auto_cb],
-            outputs=[trace_log, conflict_box, aero_plot, geo_plot, current_run_id]
+            outputs=[trace_log, conflict_box, aero_plot, geo_plot, model_viewer, current_run_id]
         )
         
         hitl_btn.click(
             fn=provide_hitl_input,
             inputs=[hitl_input, current_run_id, trace_log],
-            outputs=[trace_log, conflict_box, aero_plot, geo_plot, current_run_id]
+            outputs=[trace_log, conflict_box, aero_plot, geo_plot, model_viewer, current_run_id]
         )
         
     return demo

@@ -33,7 +33,7 @@ def plot_aerodynamics_polar(polar_file_path: str) -> go.Figure:
                 start_idx = i
                 break
                 
-        df = pd.read_csv(polar_file_path, delim_whitespace=True, skiprows=start_idx)
+        df = pd.read_csv(polar_file_path, sep=r'\s+', skiprows=start_idx)
         
         if df.empty or 'AoA' not in df.columns:
             return create_empty_figure("Empty or Invalid Polar Data")
@@ -67,6 +67,14 @@ def plot_aerodynamics_polar(polar_file_path: str) -> go.Figure:
             yaxis2=dict(title="Lift-to-Drag Ratio (L/D)", color="#ff00ff", overlaying="y", side="right"),
             legend=dict(x=0.01, y=0.99)
         )
+        
+        try:
+            png_path = polar_file_path.replace(".polar", ".png")
+            fig.write_image(png_path, width=800, height=600)
+            print(f"Saved polar plot to {png_path}")
+        except Exception as save_err:
+            print(f"Failed to save polar image: {save_err}")
+            
         return fig
     except Exception as e:
         print(f"Error parsing polar: {e}")
@@ -108,6 +116,14 @@ def plot_geometry_areas(comp_geom_csv_path: str) -> go.Figure:
             xaxis_title="Component",
             yaxis_title="Area (m^2)"
         )
+        
+        try:
+            png_path = comp_geom_csv_path.replace(".csv", ".png")
+            fig.write_image(png_path, width=800, height=600)
+            print(f"Saved geometry plot to {png_path}")
+        except Exception as save_err:
+            print(f"Failed to save geometry image: {save_err}")
+            
         return fig
     except Exception as e:
         print(f"Error parsing geometry CSV: {e}")

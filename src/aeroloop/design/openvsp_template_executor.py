@@ -317,6 +317,17 @@ def export_from_template(vsp: Any, template: Dict[str, Any], output_dir: str, ca
         vsp3_path = os.path.join(output_dir, f"{candidate_id}.vsp3")
         vsp.WriteVSPFile(vsp3_path)
         artifacts["vsp3"] = vsp3_path
+        
+    analysis_options = template.get("analysis_options", {})
+    comp_geom_opts = analysis_options.get("comp_geom", {})
+    if comp_geom_opts.get("enabled", False) and comp_geom_opts.get("output_csv", False):
+        csv_path = os.path.join(output_dir, f"{candidate_id}_CompGeom.csv")
+        try:
+            vsp.SetComputationFileName(vsp.COMP_GEOM_CSV_TYPE, csv_path)
+            vsp.ComputeCompGeom(vsp.SET_ALL, False, vsp.COMP_GEOM_CSV_TYPE)
+            artifacts["comp_geom_csv"] = csv_path
+        except Exception as exc:
+            report.errors.append(f"CompGeom CSV export failed: {exc}")
 
     for fmt_name, fmt in (export_options.get("formats", {}) or {}).items():
         if not fmt.get("enabled", False):

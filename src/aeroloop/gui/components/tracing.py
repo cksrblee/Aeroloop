@@ -23,7 +23,9 @@ def format_trace_event(event: Dict[str, Any]) -> str:
         if node_name == "mission_parsing":
             if "mission_profile" in state_update and state_update["mission_profile"]:
                 mp = state_update["mission_profile"]
-                log_lines.append(f"  -> Extracted Mission: {mp.mission_type} | Range: {mp.target_range_nm}nm")
+                range_val = mp.range_requirement_m or mp.mission_distance_m or 0.0
+                range_nm = range_val / 1852.0
+                log_lines.append(f"  -> Extracted Mission: {mp.mission_type} | Range: {range_nm:.1f}nm")
         
         elif node_name == "customer_requirement":
             if "candidate_requirements" in state_update:
@@ -33,8 +35,10 @@ def format_trace_event(event: Dict[str, Any]) -> str:
         elif node_name == "sizing":
             if "sizing_result" in state_update:
                 sr = state_update["sizing_result"]
-                log_lines.append(f"  -> MTOW: {sr.mtow_kg:.2f} kg | Power: {sr.total_power_kw:.2f} kW")
-                if sr.warnings:
+                mtow = sr.sizing_result.mtow_kg if getattr(sr, "sizing_result", None) else 0.0
+                power = sr.power_sizing_result.installed_power_kw if getattr(sr, "power_sizing_result", None) else 0.0
+                log_lines.append(f"  -> MTOW: {mtow:.2f} kg | Power: {power:.2f} kW")
+                if getattr(sr, "warnings", None):
                     log_lines.append(f"  -> WARNINGS: {', '.join(sr.warnings)}")
                     
         elif node_name == "certification_validator":
@@ -49,8 +53,8 @@ def format_trace_event(event: Dict[str, Any]) -> str:
             if "analysis_result" in state_update:
                 ar = state_update["analysis_result"]
                 log_lines.append(f"  -> Aero Status: {ar.status}")
-                if ar.artifacts and ar.artifacts.polar_file_path:
-                    log_lines.append(f"  -> Polar generated at: {ar.artifacts.polar_file_path}")
+                if getattr(ar, "analysis_artifacts", None) and getattr(ar.analysis_artifacts, "polar_file_path", None):
+                    log_lines.append(f"  -> Polar generated at: {ar.analysis_artifacts.polar_file_path}")
                     
         if "feedback_history" in state_update and state_update["feedback_history"]:
             for fb in state_update["feedback_history"]:
