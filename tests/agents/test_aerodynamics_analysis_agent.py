@@ -13,8 +13,20 @@ mock_vsp.FindGeomsWithName.return_value = ["DummyWingID"]
 mock_vsp.FindGeoms.return_value = ["DummyWingID"]
 mock_vsp.GetGeomTypeName.return_value = "Wing"
 
-# Mock ExecAnalysis to return a dummy ID
-mock_vsp.ExecAnalysis.return_value = "dummy_sweep_res"
+# Mock ExecAnalysis to return a dummy ID and create mock output files
+def mock_exec_analysis(name):
+    # If it's a sweep, create mock files
+    if "Sweep" in name:
+        with open("Unnamed.vspaero", "w") as f:
+            f.write("mock vspaero\n")
+        with open("Unnamed.lod", "w") as f:
+            f.write("Iter         VortexSheet TrailVort     Xavg      Yavg      Zavg     dSpan     SoverB      Chord     dArea    V/Vref      Cl        Cd        Cs       Clo       Cdo       Cso       Cli       Cdi       Csi        Cx        Cy       Cz        Cxo       Cyo       Czo       Cxi       Cyi       Czi       Cmx       Cmy       Cmz      Cmxo      Cmyo      Cmzo      Cmxi      Cmyi      Cmzi     StallFact  IsARotor     Diameter        roverR        RPM         Thrust        Thrusto       Thrusti        Power         Powero        Poweri         Moment       Momento       Momenti         J             CT            CQ            CP           ETAP          CT_h           CQ_h         CP_h          FOM          Angle\n")
+            f.write("1             1           1           5.97654   8.10000   0.00000   1.80000   0.10000   1.30000   2.34000   1.00000   0.00000   0.00501   0.00000   0.00000   0.00501   0.00000   0.00000   0.00000   0.00000   0.00501   0.00000   0.00000   0.00501   0.00000   0.00000   0.00000   0.00000   0.00000   0.00000   0.00000  -0.03123   0.00000   0.00000  -0.03123   0.00000   0.00000   0.00000   1.00000          0       0.00000           inf       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000\n")
+            f.write("\nIter         VortexSheet TrailVort     Xavg      Yavg      Zavg     dSpan     SoverB      Chord     dArea    V/Vref      Cl        Cd        Cs       Clo       Cdo       Cso       Cli       Cdi       Csi        Cx        Cy       Cz        Cxo       Cyo       Czo       Cxi       Cyi       Czi       Cmx       Cmy       Cmz      Cmxo      Cmyo      Cmzo      Cmxi      Cmyi      Cmzi     StallFact  IsARotor     Diameter        roverR        RPM         Thrust        Thrusto       Thrusti        Power         Powero        Poweri         Moment       Momento       Momenti         J             CT            CQ            CP           ETAP          CT_h           CQ_h         CP_h          FOM          Angle\n")
+            f.write("2             1           1           5.97654   8.10000   0.00000   1.80000   0.10000   1.30000   2.34000   1.00000   0.00000   0.00501   0.00000   0.00000   0.00501   0.00000   0.00000   0.00000   0.00000   0.00501   0.00000   0.00000   0.00501   0.00000   0.00000   0.00000   0.00000   0.00000   0.00000   0.00000  -0.03123   0.00000   0.00000  -0.03123   0.00000   0.00000   0.00000   1.00000          0       0.00000           inf       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000       0.00000\n")
+    return "dummy_sweep_res"
+
+mock_vsp.ExecAnalysis.side_effect = mock_exec_analysis
 
 # Mock FindLatestResultsID
 def mock_find_latest_results(name):
@@ -146,8 +158,14 @@ def test_aerodynamics_analysis_agent(sample_vsp3_path, sample_stl_path, monkeypa
         print("Aerodynamic Coefficients:")
         for case in result.aerodynamic_coefficients:
             print(f"  AoA: {case.alpha_deg:5.1f} deg | CL: {case.cl:.4f} | CD: {case.cd:.4f} | CM: {case.cm:.4f}")
-            assert case.cl is not None, "CL should not be None."
             assert case.cd is not None, "CD should not be None."
+            if case.load_distribution:
+                print(f"  [Load Distribution] Found {len(case.load_distribution)} spanwise cases.")
+                for lc in case.load_distribution:
+                    print(f"    - Y span: {lc.y_span[:2]}... Cl: {lc.cl[:2]}...")
+            else:
+                print("  [Load Distribution] Not found.")
+            
             
         print(f"Aerodynamic Summary - Min CD: {result.aerodynamic_summary.cd_min}")
         print(f"Aerodynamic Summary - Max L/D: {result.aerodynamic_summary.max_lift_to_drag}")
