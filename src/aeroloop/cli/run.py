@@ -767,6 +767,9 @@ def main():
 
     # MissionParsingAgent subparser
     mission_parser = subparsers.add_parser("mission", help="Run the MissionParsingAgent")
+    
+    # GUI subparser
+    gui_parser = subparsers.add_parser("gui", help="Launch the AeroLoop Gradio Dashboard")
     mission_parser.add_argument(
         "text",
         type=str,
@@ -847,7 +850,14 @@ def main():
 
     args = parser.parse_args()
 
-    if args.agent == "mission":
+    # Ensure the fallback .agents directory exists
+    ensure_agents_dir()
+
+    if args.agent == "gui":
+        from aeroloop.gui.app import build_app
+        app = build_app()
+        app.launch(share=False)
+    elif args.agent == "mission":
         run_mission_agent(args)
     elif args.agent == "customer":
         run_customer_agent(args)

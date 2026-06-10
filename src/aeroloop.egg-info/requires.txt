@@ -6,6 +6,10 @@ langchain-openai
 langgraph
 langfuse
 chromadb
+pyyaml
+gradio>=4.0.0
+plotly
+pandas
 
 [dev]
 pytest
