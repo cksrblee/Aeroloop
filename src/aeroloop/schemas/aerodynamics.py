@@ -36,6 +36,15 @@ class AeroAnalysisConfig(BaseModel):
     allow_aircraft_type_fallback: bool = False
 
 
+class LoadDistributionCase(BaseModel):
+    y_span: List[float] = []
+    chord: List[float] = []
+    cl: List[float] = []
+    cd: List[float] = []
+    cm: List[float] = []
+    area: List[float] = []
+
+
 class AerodynamicCoefficientCase(BaseModel):
     case_id: str
     alpha_deg: float
@@ -49,6 +58,8 @@ class AerodynamicCoefficientCase(BaseModel):
     cy: Optional[float] = None
     cl_roll: Optional[float] = None
     cn_yaw: Optional[float] = None
+
+    load_distribution: Optional[List[LoadDistributionCase]] = None
 
     source: str
 
@@ -111,6 +122,7 @@ class AeroAnalysisArtifacts(BaseModel):
     drag_polar_plot_path: Optional[str] = None
     lift_curve_plot_path: Optional[str] = None
     analysis_summary_path: Optional[str] = None
+    load_distribution_csv_path: Optional[str] = None
 
 
 class TraceLink(BaseModel):

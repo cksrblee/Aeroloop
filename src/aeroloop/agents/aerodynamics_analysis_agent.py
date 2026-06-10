@@ -86,23 +86,65 @@ class AerodynamicsAnalysisAgent(BaseAIAgent):
                     result.errors.append(ErrorInfo(error_id="MASS_PROPS_FAILED", module_name="AerodynamicsAnalysisAgent", message="Mass properties computation failed or returned empty results.", recoverable=False))
             
             if request.analysis_config.run_vspaero:
-                # 4. Compute Geometry
-                runner.run_compute_geometry()
+                # 5. Run Sweep and Compute Geometry
+                out_dir = request.output_directory
+                os.makedirs(out_dir, exist_ok=True)
                 
-                # 5. Run Sweep
-                with tempfile.TemporaryDirectory() as temp_dir:
-                    log_file = os.path.join(temp_dir, "vspaero.log")
+                # Copy VSP3 file to out_dir so OpenVSP generates output files here
+                local_vsp3_path = os.path.join(out_dir, os.path.basename(vsp3_path))
+                import shutil
+                shutil.copy2(vsp3_path, local_vsp3_path)
+                
+                # Reload the VSP3 from the new location so its base path becomes out_dir
+                runner.load_or_generate_vsp3(local_vsp3_path)
+                
+                log_file = os.path.join(out_dir, "vspaero.log")
+                
+                # Change CWD so vspaero binary (if it relies on CWD) and our parser look in out_dir
+                old_cwd = os.getcwd()
+                os.chdir(out_dir)
+                
+                try:
+                    # 4. Compute Geometry
+                    runner.run_compute_geometry()
                     
-                    sweep_res_id = runner.run_vspaero_sweep(
-                        alpha_range=request.analysis_config.angle_of_attack_deg,
-                        mach_range=[0.0] if not request.analysis_config.speed_mps else request.analysis_config.speed_mps, # Simplified Mach for PoC
-                        geom_set=0,
-                        wing_id=wing_id,
-                        redirect_file=log_file
-                    )
+                    # Calculate Mach number (approximate, assuming sea level sound speed ~340 m/s)
+                    mach_num = 0.0
+                    if request.analysis_config.speed_mps:
+                        speed = request.analysis_config.speed_mps
+                        speed_val = speed[0] if isinstance(speed, list) else speed
+                        mach_num = speed_val / 340.0
+                        
+                    base_name = os.path.basename(local_vsp3_path).replace(".vsp3", "")
                     
+                    print("\n[AerodynamicsAnalysisAgent] Starting VSPAERO Solver... (OpenVSP blocking, please wait or tail the .history file in another terminal)")
+                    
+                    import signal
+                    # OpenVSP C++ waitpid() hangs if Python's asyncio/multiprocessing intercepts SIGCHLD
+                    try:
+                        old_handler = signal.signal(signal.SIGCHLD, signal.SIG_DFL)
+                    except Exception:
+                        old_handler = None
+                        
+                    try:
+                        sweep_res_id = runner.run_vspaero_sweep(
+                            alpha_range=request.analysis_config.angle_of_attack_deg,
+                            mach_range=[mach_num],
+                            geom_set=0,
+                            wing_id=wing_id,
+                            redirect_file=log_file
+                        )
+                    finally:
+                        if old_handler is not None:
+                            signal.signal(signal.SIGCHLD, old_handler)
+                    
+                    runner.run_vsploads(base_name=base_name, cwd=".")
+                        
                     # 6. Parse Results
-                    parsed_data = parse_vspaero_results(runner.vsp, sweep_res_id)
+                    parsed_data = parse_vspaero_results(runner.vsp, sweep_res_id, cwd=".")
+                finally:
+                    os.chdir(old_cwd)
+                        
                     result.aerodynamic_coefficients = parsed_data.get("coefficients", [])
                     
                     if parsed_data.get("warnings"):
@@ -119,6 +161,28 @@ class AerodynamicsAnalysisAgent(BaseAIAgent):
                             cd_min=cd_min,
                             max_lift_to_drag=max_ld
                         )
+                        
+                    # Write load distribution to CSV if present
+                    import csv
+                    if result.aerodynamic_coefficients:
+                        csv_path = os.path.join(request.output_directory, "load_distribution.csv")
+                        wrote_csv = False
+                        with open(csv_path, "w", newline="", encoding="utf-8") as csvfile:
+                            writer = csv.writer(csvfile)
+                            writer.writerow(["Case_ID", "Alpha_deg", "Y_Span_m", "Chord_m", "Area_m2", "Cl", "Cd", "Cm"])
+                            for case in result.aerodynamic_coefficients:
+                                if case.load_distribution:
+                                    wrote_csv = True
+                                    for ld in case.load_distribution:
+                                        for y, ch, ar, cl, cd, cm in zip(ld.y_span, ld.chord, ld.area, ld.cl, ld.cd, ld.cm):
+                                            writer.writerow([case.case_id, case.alpha_deg, y, ch, ar, cl, cd, cm])
+                        if not wrote_csv:
+                            if os.path.exists(csv_path):
+                                os.remove(csv_path)
+                        else:
+                            if result.analysis_artifacts is None:
+                                result.analysis_artifacts = AeroAnalysisArtifacts()
+                            result.analysis_artifacts.load_distribution_csv_path = csv_path
                         
             # Determine Final Status
             if result.errors:

@@ -1,7 +1,13 @@
 import os
 import tempfile
+import sys
 from typing import Dict, Any, List, Optional
 import shutil
+
+# Ensure we use the locally built OpenVSP Python API
+vsp_path = "/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp"
+if vsp_path not in sys.path:
+    sys.path.insert(0, vsp_path)
 
 class VSPAeroRunner:
     def __init__(self, vspaero_path: Optional[str] = None):
@@ -24,10 +30,18 @@ class VSPAeroRunner:
                 print(f"Warning: VSPAERO executable not found at {self.vspaero_path}")
             self.vsp.SetVSPAEROPath(self.vspaero_path)
         else:
-            # Fallback path if none provided (from previous agent implementation)
-            fallback_path = "/root/anaconda3/envs/aero/bin"
-            if self.vsp.CheckForVSPAERO(fallback_path):
-                self.vsp.SetVSPAEROPath(fallback_path)
+            # Fallback paths if none provided (from previous agent implementation)
+            fallback_paths = [
+                "/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp/openvsp",
+                "/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/src/vsp",
+                "/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/_CPack_Packages/Linux/ZIP/OpenVSP-3.50.5-Linux",
+                "/root/anaconda3/envs/aero/bin"
+            ]
+            for path in fallback_paths:
+                if self.vsp.CheckForVSPAERO(path) or os.path.exists(os.path.join(path, "vspaero")):
+                    self.vsp.SetVSPAEROPath(path)
+                    self.vspaero_path = path
+                    break
 
     def load_or_generate_vsp3(self, vsp3_path: str):
         """Loads a .vsp3 file into the OpenVSP workspace."""
@@ -38,18 +52,12 @@ class VSPAeroRunner:
         self.vsp.ReadVSPFile(vsp3_path)
         self.vsp.Update()
 
-    def run_compute_geometry(self, analysis_method: int = None) -> str:
+    def run_compute_geometry(self) -> str:
         """Runs VSPAEROComputeGeometry to prepare mesh/panels."""
         comp_name = "VSPAEROComputeGeometry"
         self.vsp.SetAnalysisInputDefaults(comp_name)
 
-        if analysis_method is None:
-            analysis_method = self.vsp.VORTEX_LATTICE
-            
-        method = list(self.vsp.GetIntAnalysisInput(comp_name, "AnalysisMethod"))
-        method[0] = analysis_method
-        self.vsp.SetIntAnalysisInput(comp_name, "AnalysisMethod", method)
-
+        # Some versions don't require AnalysisMethod here, they use defaults or set it in VSPAEROSweep.
         comp_res_id = self.vsp.ExecAnalysis(comp_name)
         return comp_res_id
 
@@ -110,3 +118,30 @@ class VSPAeroRunner:
         self.vsp.Update()
         sweep_res_id = self.vsp.ExecAnalysis(sweep_name)
         return sweep_res_id
+
+    def run_vsploads(self, base_name: str, cwd: str = ".") -> bool:
+        """Runs the vsploads utility on the sweep results to generate load distributions."""
+        if not self.vspaero_path:
+            return False
+            
+        vsploads_exe = os.path.join(os.path.dirname(self.vspaero_path), "vsploads")
+        if not os.path.exists(vsploads_exe):
+            print(f"Warning: vsploads executable not found at {vsploads_exe}")
+            return False
+            
+        import subprocess
+        try:
+            # We redirect stdin from /dev/null so it doesn't block waiting for input
+            result = subprocess.run(
+                [vsploads_exe, base_name],
+                cwd=cwd,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                check=False
+            )
+            return result.returncode == 0
+        except Exception as e:
+            print(f"Error running vsploads: {e}")
+            return False

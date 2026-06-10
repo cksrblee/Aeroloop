@@ -459,6 +459,112 @@ def run_geometry_agent(args):
         print(f"\n[ERROR] GeometryDesignAgent failed: {e}")
         raise
 
+def run_aerodynamics_agent(args):
+    """Run the AerodynamicsAnalysisAgent on a previously generated GeometryDesignResult."""
+    print("Initializing AerodynamicsAnalysisAgent...")
+    import sys
+    sys.path.insert(0, '/root/projects/AeroLoop/thirdparty/build_openvsp/OpenVSP-prefix/src/OpenVSP-build/python_pseudo/openvsp')
+    from aeroloop.agents.aerodynamics_analysis_agent import AerodynamicsAnalysisAgent
+    from aeroloop.schemas.geometry import GeometryDesignResult
+    from aeroloop.schemas.aerodynamics import AerodynamicsAnalysisRequest, AeroAnalysisConfig, AircraftCandidate, GeometryArtifacts
+    
+    agent = AerodynamicsAnalysisAgent()
+    
+    input_file = Path(args.input_file)
+    if not input_file.exists():
+        print(f"\n[ERROR] File not found: {input_file.absolute()}")
+        return
+
+    print(f"Loading geometry results from: {input_file.absolute()}")
+    try:
+        with open(input_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            
+        geo_result = GeometryDesignResult(**data)
+        
+        out_dir = config.get_run_dir(geo_result.run_id) / "aerodynamics_output"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        
+        req = AerodynamicsAnalysisRequest(
+            aero_analysis_request_id=f"AERO-REQ-{geo_result.run_id[-6:]}",
+            run_id=geo_result.run_id,
+            mission_id=geo_result.mission_id if hasattr(geo_result, "mission_id") else "unknown_mission",
+            candidate_id=geo_result.candidate_id,
+            geometry_result_id=geo_result.geometry_result_id if hasattr(geo_result, "geometry_result_id") else "GEO-RES-001",
+            aircraft_candidate=AircraftCandidate(
+                candidate_id=geo_result.candidate_id,
+                aircraft_type="unknown",
+                template_id="TPL-001"
+            ),
+            geometry_artifacts=GeometryArtifacts(
+                vsp3_file_path=geo_result.geometry_artifacts.vsp3_file_path
+            ),
+            analysis_config=AeroAnalysisConfig(
+                analysis_backend="openvsp_vspaero",
+                analysis_fidelity="low",
+                run_mass_properties=True,
+                run_vspaero=False
+            ),
+            output_directory=str(out_dir)
+        )
+    except Exception as e:
+        print(f"\n[ERROR] Failed to load inputs from {input_file.name}: {e}")
+        return
+
+    print("\n--- Running AerodynamicsAnalysisAgent ---")
+    try:
+        res = agent.run({"analysis_request": req})
+        result = res.get("analysis_result")
+        
+        run_dir = config.get_run_dir(result.run_id)
+        output_file = run_dir / f"aerodynamics_analysis_result.json"
+        
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(result.model_dump_json(indent=2))
+
+        print(f"\n[SUCCESS] Aerodynamics Analysis completed. Status: {result.status}")
+        print(f"JSON Data saved to: {output_file.absolute()}")
+        
+        print("\n  [Aerodynamics Analysis Summary]")
+        print(f"  Status: {result.status.upper()}")
+        if result.aerodynamic_summary:
+            summary = result.aerodynamic_summary
+            if summary.cl_alpha_per_deg is not None:
+                print(f"  Lift Curve Slope (dCl/dAlpha): {summary.cl_alpha_per_deg:.4f} /deg")
+            if summary.cd_min is not None:
+                print(f"  Minimum Drag (Cd0)           : {summary.cd_min:.4f}")
+            if summary.max_lift_to_drag is not None:
+                print(f"  Max L/D                      : {summary.max_lift_to_drag:.2f}")
+        if result.mass_properties:
+            mp = result.mass_properties
+            if mp.mass_analysis_available:
+                print(f"  Estimated Total Mass         : {mp.total_mass_kg:.1f} kg")
+                if mp.center_of_gravity_m:
+                    cg = mp.center_of_gravity_m
+                    print(f"  Center of Gravity (x,y,z)    : ({cg[0]:.2f}, {cg[1]:.2f}, {cg[2]:.2f}) m")
+        if result.aerodynamic_coefficients:
+            for case in result.aerodynamic_coefficients[:1]:
+                if case.load_distribution and len(case.load_distribution) > 0:
+                    ld = case.load_distribution[0]
+                    print(f"  Spanwise Load Data           : Extracted {len(ld.y_span)} sections (e.g. Max Cl: {max(ld.cl):.3f})")
+                    break
+        if result.analysis_artifacts and result.analysis_artifacts.load_distribution_csv_path:
+            print(f"  Load Distribution File       : {result.analysis_artifacts.load_distribution_csv_path}")
+        if result.warnings:
+            print(f"  Warnings: {len(result.warnings)}")
+            for w in result.warnings[:3]:
+                print(f"    - {w}")
+            if len(result.warnings) > 3:
+                print(f"    - ... and {len(result.warnings) - 3} more")
+        if result.errors:
+            print(f"  Errors: {len(result.errors)}")
+            for e in result.errors[:3]:
+                print(f"    - {e.message}")
+            
+    except Exception as e:
+        print(f"\n[ERROR] AerodynamicsAnalysisAgent failed: {e}")
+        raise
+
 def run_validator_agent(args):
     """Run the CertificationValidatorAgent on a reasoning result and compliance result."""
     print("Initializing CertificationValidatorAgent...")
@@ -583,6 +689,44 @@ def run_workflow(args):
                 # Print intermediate results for visibility
                 if "candidate_requirements" in state_update and state_update["candidate_requirements"]:
                     print(f"  Generated {len(state_update['candidate_requirements'])} candidate requirements.")
+                
+                if "analysis_result" in state_update and state_update["analysis_result"]:
+                    res = state_update["analysis_result"]
+                    print("\n  [Aerodynamics Analysis Summary]")
+                    print(f"  Status: {res.status.upper()}")
+                    if res.aerodynamic_summary:
+                        summary = res.aerodynamic_summary
+                        if summary.cl_alpha_per_deg is not None:
+                            print(f"  Lift Curve Slope (dCl/dAlpha): {summary.cl_alpha_per_deg:.4f} /deg")
+                        if summary.cd_min is not None:
+                            print(f"  Minimum Drag (Cd0)           : {summary.cd_min:.4f}")
+                        if summary.max_lift_to_drag is not None:
+                            print(f"  Max L/D                      : {summary.max_lift_to_drag:.2f}")
+                    if res.mass_properties:
+                        mp = res.mass_properties
+                        if mp.mass_analysis_available:
+                            print(f"  Estimated Total Mass         : {mp.total_mass_kg:.1f} kg")
+                            if mp.center_of_gravity_m:
+                                cg = mp.center_of_gravity_m
+                                print(f"  Center of Gravity (x,y,z)    : ({cg[0]:.2f}, {cg[1]:.2f}, {cg[2]:.2f}) m")
+                    if res.aerodynamic_coefficients:
+                        for case in res.aerodynamic_coefficients[:1]:
+                            if case.load_distribution and len(case.load_distribution) > 0:
+                                ld = case.load_distribution[0]
+                                print(f"  Spanwise Load Data           : Extracted {len(ld.y_span)} sections (e.g. Max Cl: {max(ld.cl):.3f})")
+                                break
+                    if res.analysis_artifacts and res.analysis_artifacts.load_distribution_csv_path:
+                        print(f"  Load Distribution File       : {res.analysis_artifacts.load_distribution_csv_path}")
+                    if res.warnings:
+                        print(f"  Warnings: {len(res.warnings)}")
+                        for w in res.warnings[:3]:
+                            print(f"    - {w}")
+                        if len(res.warnings) > 3:
+                            print(f"    - ... and {len(res.warnings) - 3} more")
+                    if res.errors:
+                        print(f"  Errors: {len(res.errors)}")
+                        for e in res.errors[:3]:
+                            print(f"    - {e.message}")
             
             # Check if graph is paused due to interrupt
             state_snapshot = app.get_state(graph_config)
@@ -605,7 +749,12 @@ def run_workflow(args):
             else:
                 break
         
-        print("\n[SUCCESS] Workflow execution completed.")
+        state_snapshot = app.get_state(graph_config)
+        final_status = state_snapshot.values.get("status", "unknown") if hasattr(state_snapshot, "values") else "unknown"
+        if final_status == "failed":
+            print("\n[FAILED] Workflow execution completed with errors.")
+        else:
+            print("\n[SUCCESS] Workflow execution completed.")
     except Exception as e:
         print(f"\n[ERROR] Workflow failed: {e}")
         raise
@@ -675,6 +824,14 @@ def main():
         help="Path to the JSON file containing the SizingAgentResult (e.g. results/default_user/RUN-XXX/sizing_result.json)"
     )
 
+    # AerodynamicsAnalysisAgent subparser
+    aerodynamics_parser = subparsers.add_parser("aerodynamics", help="Run the AerodynamicsAnalysisAgent")
+    aerodynamics_parser.add_argument(
+        "input_file",
+        type=str,
+        help="Path to the JSON file containing the GeometryDesignResult (e.g. results/default_user/RUN-XXX/geometry_design_result.json)"
+    )
+
     # Workflow subparser
     workflow_parser = subparsers.add_parser("workflow", help="Run the Bidirectional LangGraph Workflow")
     workflow_parser.add_argument(
@@ -702,6 +859,8 @@ def main():
         run_sizing_agent(args)
     elif args.agent == "geometry":
         run_geometry_agent(args)
+    elif args.agent == "aerodynamics":
+        run_aerodynamics_agent(args)
     elif args.agent == "validator":
         run_validator_agent(args)
     elif args.agent == "workflow":

@@ -360,6 +360,9 @@ def aerodynamics_analysis_node(state: WorkflowState):
     candidate_id = geo_result.candidate_id if hasattr(geo_result, "candidate_id") else "AC-001"
     mission_id = f"M-{hashlib.md5(run_id.encode()).hexdigest()[:8]}"
 
+    out_dir = config.get_run_dir(run_id) / "aerodynamics_output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     req = AerodynamicsAnalysisRequest(
         aero_analysis_request_id=f"AERO-REQ-{hashlib.md5((run_id + candidate_id).encode()).hexdigest()[:8]}",
         run_id=run_id,
@@ -378,9 +381,9 @@ def aerodynamics_analysis_node(state: WorkflowState):
             analysis_backend="openvsp_vspaero",
             analysis_fidelity="low",
             run_mass_properties=True,
-            run_vspaero=False # Simplified to mass props by default for this workflow node unless specified
+            run_vspaero=True # Enabled to run VSPAERO and extract load distributions
         ),
-        output_directory="/tmp"
+        output_directory=str(out_dir)
     )
     
     # We pass the request directly via dict to run() matching BaseAIAgent expectations
