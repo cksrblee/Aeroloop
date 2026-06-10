@@ -17,7 +17,10 @@ dependencies = [
     "langgraph",
     "langfuse",
     "chromadb",
-    "pyyaml"
+    "pyyaml",
+    "gradio>=4.0.0",
+    "plotly",
+    "pandas"
 ]
 
 [project.optional-dependencies]
