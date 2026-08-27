@@ -1,6 +1,10 @@
 # AeroLoop: Autonomous Multi-Agent eVTOL / UAM Aircraft Conceptual Design & Verification Platform
 
 <p align="center">
+  <a href="README.md">English</a> | <b>한국어</b>
+</p>
+
+<p align="center">
   <img src="cert_agent_graph.png" alt="AeroLoop Logo / Agent Flow" width="750"/>
 </p>
 

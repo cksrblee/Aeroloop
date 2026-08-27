@@ -1,24 +1,88 @@
-venv/
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables & secrets
 .env
+.env.*
+!.env.example
 
+# Testing & Linting
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Agent runs and generated outputs
 .agents/
-
-data/
-
-*.deb
-*.sh
-thirdparty/
-*.vsp3
-*.stl
-*.pngresults/
-
-Unnamed*
 results/
-
-demo/out/*
 tmp/
+demo/out/*
 
+# Logs
 *.log
 *.out
+nohup.out
 debug*
+
+# Thirdparty dependencies & build directories
+thirdparty/
+
+# OpenVSP and VSPAERO generated output files
+Unnamed*
+*.vsp3
+*.stl
+*.obj
+*.adb
+*.adb.cases
+*.case.*
+*.csf
+*.cuts
+*.group.*
+*.history
+*.lod
+*.polar
+*.quad.cases
+*.vkey
+*.vspaero
+*.vspgeom
+*_CompGeom.*
+*_MassProps.txt
+*_ParasiteBuildUp.csv
+
+# OS and IDE files
+.DS_Store
+.vscode/
+.idea/
