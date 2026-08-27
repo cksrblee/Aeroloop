@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="workflow_graph.png" alt="AeroLoop Multi-Agent Workflow Graph" width="100%"/>
+  <img src="aeroloop_overview.png" alt="AeroLoop Multi-Agent Architecture Overview" width="100%"/>
 </p>
 
 **AeroLoop**는 도심항공교통(UAM) 및 eVTOL 항공기의 개념 설계(Conceptual Design), 인증 규정 검토(Certification Compliance), 물리 해석(Aerodynamics & Sizing), 3D 형상 생성(OpenVSP CAD), 비행 시뮬레이션 및 실시간 요구도 검증(Runtime Verification) 전 과정을 유기적으로 통합·자동화하는 **엔지니어링 멀티 에이전트 플랫폼**입니다.
@@ -100,6 +100,10 @@ flowchart TD
 ### 2. 양방향 상태 그래프 워크플로우 (Bidirectional Workflow)
 
 LangGraph 기반의 상태 그래프로 구성되어 있으며, 설계 조건 불만족이나 물리적 불일치가 탐지될 경우 이전 단계로 롤백 및 파라미터 보정을 수행합니다.
+
+<p align="center">
+  <img src="workflow_graph.png" alt="AeroLoop LangGraph Workflow Graph" width="100%"/>
+</p>
 
 ```mermaid
 flowchart TD

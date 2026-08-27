@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="workflow_graph.png" alt="AeroLoop Multi-Agent Workflow Graph" width="100%"/>
+  <img src="aeroloop_overview.png" alt="AeroLoop Multi-Agent Architecture Overview" width="100%"/>
 </p>
 
 **AeroLoop** is an engineering multi-agent platform designed to automate and orchestrate the full lifecycle of Urban Air Mobility (UAM) and eVTOL conceptual aircraft design, regulatory certification compliance, physics-based analysis, 3D parametric CAD modeling (OpenVSP), flight simulation, and runtime requirement verification.
@@ -100,6 +100,10 @@ flowchart TD
 ### 2. Bidirectional LangGraph Workflow
 
 The workflow utilizes a LangGraph StateGraph that supports dynamic feedback and rollback when design constraints or physics solvers fail.
+
+<p align="center">
+  <img src="workflow_graph.png" alt="AeroLoop LangGraph Workflow Graph" width="100%"/>
+</p>
 
 ```mermaid
 flowchart TD
