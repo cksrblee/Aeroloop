@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="cert_agent_graph.png" alt="AeroLoop Logo / Agent Flow" width="750"/>
+  <img src="workflow_graph.png" alt="AeroLoop Multi-Agent Workflow Graph" width="100%"/>
 </p>
 
 **AeroLoop**는 도심항공교통(UAM) 및 eVTOL 항공기의 개념 설계(Conceptual Design), 인증 규정 검토(Certification Compliance), 물리 해석(Aerodynamics & Sizing), 3D 형상 생성(OpenVSP CAD), 비행 시뮬레이션 및 실시간 요구도 검증(Runtime Verification) 전 과정을 유기적으로 통합·자동화하는 **엔지니어링 멀티 에이전트 플랫폼**입니다.
@@ -60,41 +60,39 @@
 AeroLoop는 목적과 계층에 따라 3단계 레이어로 구분되어 운영됩니다.
 
 ```mermaid
-graph TD
-    User["User Mission Input<br/>(자연어 임무 입력)"] --> Orch["OrchestratorAgent<br/>(중앙 라우터 및 상태 관리자)"]
+flowchart TD
+    User["User Mission Input (자연어)"] --> Orch["OrchestratorAgent (중앙 라우터)"]
 
-    subgraph L1["Layer 1. Requirement & Compliance Intelligence Layer"]
-        MPA["MissionParsingAgent<br/>임무 파싱 및 제약 추출"]
-        CRA["CustomerRequirementAgent<br/>고객/운용 요구도 도출"]
-        CCA["CertificationComplianceAgent<br/>인증 규정 / CCL / MoC 매핑"]
-        RRA["RequirementReasoningAgent<br/>요구도 종합 / 충돌 조정 / 기준선 확정"]
-        CVA["CertificationValidatorAgent<br/>설계 기준선 규정 적합성 검증"]
+    subgraph L1["Layer 1: 요구도 및 인증 인텔리전스"]
+        direction TB
+        MPA["MissionParsingAgent"]
+        CRA["CustomerRequirementAgent"]
+        CCA["CertificationComplianceAgent"]
+        RRA["RequirementReasoningAgent"]
+        CVA["CertificationValidatorAgent"]
+        MPA --> CRA --> CCA --> RRA --> CVA
     end
 
-    subgraph L2["Layer 2. Conceptual Design & Geometry Layer"]
-        SA["SizingAgent<br/>질량 / 동력 / 배터리 / 디스크 사이징"]
-        GDA["GeometryDesignAgent<br/>OpenVSP 3D 파라메트릭 형상 생성"]
+    subgraph L2["Layer 2: 개념 설계 및 형상 생성"]
+        direction TB
+        SA["SizingAgent"]
+        GDA["GeometryDesignAgent"]
+        SA --> GDA
     end
 
-    subgraph L3["Layer 3. Aerodynamics, Simulation & Verification Layer"]
-        AAA["AerodynamicsAnalysisAgent<br/>VSPAERO 공력 계수 / 질량 특성 해석"]
-        SIM["SimulationAgent / PathPlanningAgent<br/>비행 궤적 및 도심 환경 시뮬레이션"]
-        RVA["RuntimeVerificationAgent<br/>비행 중 실시간 요구도/안전 검증"]
-        RGA["ReportGenerationAgent<br/>설계/인증/해석 최종 종합 리포트 생성"]
+    subgraph L3["Layer 3: 공력 해석, 시뮬레이션 및 검증"]
+        direction TB
+        AAA["AerodynamicsAnalysisAgent"]
+        SIM["Simulation / PathPlanning"]
+        RVA["RuntimeVerificationAgent"]
+        RGA["ReportGenerationAgent"]
+        AAA --> SIM --> RVA --> RGA
     end
 
-    Orch <--> MPA
-    Orch <--> CRA
-    Orch <--> CCA
-    Orch <--> RRA
-    Orch <--> CVA
-    Orch <--> SA
-    Orch <--> GDA
-    Orch <--> AAA
-    Orch <--> SIM
-    Orch <--> RVA
-    Orch <--> RGA
-    RGA --> End["Final Output<br/>(3D 형상 / 공력 해석 / 인증 문서 / 종합 리포트)"]
+    Orch --> L1
+    L1 --> L2
+    L2 --> L3
+    L3 --> End["Final Output (설계안 / 리포트)"]
 ```
 
 ---
@@ -104,50 +102,26 @@ graph TD
 LangGraph 기반의 상태 그래프로 구성되어 있으며, 설계 조건 불만족이나 물리적 불일치가 탐지될 경우 이전 단계로 롤백 및 파라미터 보정을 수행합니다.
 
 ```mermaid
-graph TD
-    Start["START<br/>(Natural Language Mission)"] --> Orch["OrchestratorAgent"]
+flowchart TD
+    Start(["START: 자연어 임무 입력"]) --> MPA["1. MissionParsingAgent<br/>(임무 프로파일 및 제약 조건 추출)"]
+    MPA --> CRA["2. CustomerRequirementAgent<br/>(고객 및 운용 요구도 도출)"]
+    CRA --> CCA["3. CertificationComplianceAgent<br/>(인증 규정 및 CCL/MoC 매핑)"]
+    CCA --> RRA["4. RequirementReasoningAgent<br/>(충돌 해결 및 ConceptBaseline 확정)"]
+    RRA --> CVA["5. CertificationValidatorAgent<br/>(설계 기준선 규정 검증)"]
+    CVA --> SA["6. SizingAgent<br/>(MTOW, 배터리 및 동력 사이징)"]
+    SA --> GDA["7. GeometryDesignAgent<br/>(OpenVSP 3D CAD 모델링)"]
+    GDA --> AAA["8. AerodynamicsAnalysisAgent<br/>(VSPAERO 공력 계수 및 질량 해석)"]
+    AAA --> SIM["9. Simulation & PathPlanning<br/>(비행 궤적 및 에너지 시뮬레이션)"]
+    SIM --> RVA["10. RuntimeVerificationAgent<br/>(런타임 제약 및 안전 검증)"]
+    RVA --> RGA["11. ReportGenerationAgent<br/>(최종 설계 리포트 작성)"]
+    RGA --> EndNode(["END: 개념 설계 블루프린트"])
 
-    Orch -->|"1. Parse Mission"| MPA["MissionParsingAgent"]
-    MPA -->|"MissionProfile, Explicit Constraints, Missing Fields"| Orch
-
-    Orch -->|"2. Extract Customer Reqs"| CRA["CustomerRequirementAgent"]
-    CRA -->|"Candidate Requirements, Unresolved Questions"| Orch
-
-    Orch -->|"3. Review Certification Basis"| CCA["CertificationComplianceAgent"]
-    CCA -->|"Certification Basis, Applicable Rules, CCL/MoC Draft"| Orch
-
-    Orch -->|"4. Resolve & Baseline Reqs"| RRA["RequirementReasoningAgent"]
-    RRA -->|"FinalRequirementSet, ConceptBaseline (SizingDraft)"| Orch
-
-    Orch -->|"5. Validate Baseline"| CVA["CertificationValidatorAgent"]
-    CVA -->|"ValidationResult (is_valid, Violations/Warnings)"| Orch
-
-    Orch -->|"6. Size Aircraft"| SA["SizingAgent"]
-    SA -->|"SizingResult (MTOW, Battery, Disk Area, Wing Area)"| Orch
-
-    Orch -->|"7. Generate Geometry"| GDA["GeometryDesignAgent"]
-    GDA -->|"OpenVSP .vsp3, .stl, 3D Parameters"| Orch
-
-    Orch -->|"8. Analyze Aerodynamics"| AAA["AerodynamicsAnalysisAgent"]
-    AAA -->|"Aero Summary (dCl/dAlpha, Cd0, L/D), Mass Properties"| Orch
-
-    Orch -->|"9. Simulate Mission"| SIM["SimulationAgent / PathPlanningAgent"]
-    SIM -->|"Trajectory, Energy Consumption, Obstacle Clearance"| Orch
-
-    Orch -->|"10. Runtime Verification"| RVA["RuntimeVerificationAgent"]
-    RVA -->|"Pass/Fail Status, Violation Logs, Runtime Evidence"| Orch
-
-    Orch -->|"11. Generate Final Report"| RGA["ReportGenerationAgent"]
-    RGA --> End["END<br/>(Final Conceptual Design Blueprint)"]
-
-    %% Feedback / Rollback Loops
-    CRA -.->|"정보 누락 / 모호한 요구도"| RRA
-    CVA -.->|"인증 규정 위반"| RRA
-    SA -.->|"수렴 실패 / 물리적 사이징 불가"| RRA
-    AAA -.->|"공력 계수 미달 / 불안정"| SA
-    SIM -.->|"에너지 고갈 / 지오펜스 침범"| RRA
-    RVA -.->|"Runtime 요구도 위반"| Orch
-    Orch -.->|"반복 실패 시 임무 제약 완화 요청"| MPA
+    %% Feedback and Rollback Paths
+    CVA -.->|인증 규정 위반| RRA
+    SA -.->|사이징 수렴 불가| RRA
+    AAA -.->|공력 성능 미달 / 실속| SA
+    SIM -.->|배터리 부족 / 지오펜스 위반| RRA
+    RVA -.->|요구도 위반 시 제약 완화| MPA
 ```
 
 ---
@@ -156,16 +130,16 @@ graph TD
 
 ```mermaid
 flowchart LR
-    A["MissionParsingAgent<br/>임무 정의 및 수치 제약 추출"] --> B["CustomerRequirementAgent<br/>고객/운용 기능 요구도 분석"]
-    B --> C["CertificationComplianceAgent<br/>인증 규정, CCL, MoC 도출"]
-    C --> D["RequirementReasoningAgent<br/>요구도 확정 및 ConceptBaseline 생성"]
-    D --> E["CertificationValidatorAgent<br/>초기 기준선 규정 위반 검사"]
-    E --> F["SizingAgent<br/>MTOW/배터리/공학 사이징"]
-    F --> G["GeometryDesignAgent<br/>OpenVSP 3D 모델 생성"]
-    G --> H["AerodynamicsAnalysisAgent<br/>VSPAERO 공력 및 질량 해석"]
-    H --> I["Simulation & PathPlanning<br/>도심 3D 비행 시뮬레이션"]
-    I --> J["RuntimeVerificationAgent<br/>요구도 충족 및 안전성 검증"]
-    J --> K["ReportGenerationAgent<br/>최종 종합 설계 리포트 작성"]
+    A["MissionParsing<br/>임무 정의"] --> B["CustomerReq<br/>요구도 추출"]
+    B --> C["Certification<br/>규정 및 MoC"]
+    C --> D["Reasoning<br/>요구도 확정"]
+    D --> E["Validator<br/>규정 검증"]
+    E --> F["Sizing<br/>MTOW 및 사이징"]
+    F --> G["Geometry<br/>3D 형상 모델"]
+    G --> H["Aerodynamics<br/>공력 계수 해석"]
+    H --> I["Simulation<br/>비행 시뮬레이션"]
+    I --> J["Verification<br/>안전 검증"]
+    J --> K["ReportGen<br/>최종 리포트"]
 ```
 
 ---
@@ -173,12 +147,12 @@ flowchart LR
 ### 4. 데이터 아티팩트 및 추적성 흐름
 
 ```mermaid
-graph TD
+flowchart TD
     Input["Natural Language Mission"] --> MP["MissionProfile JSON"]
     MP --> CR["CandidateRequirementSet"]
     CR --> CB["Certification Basis & Rules"]
     CB --> CCL["Compliance Checklist (CCL)"]
-    CCL --> MOC["Means of Compliance (MoC Plan)"]
+    CCL --> MOC["Means of Compliance (MoC)"]
 
     CR --> FR["FinalRequirementSet"]
     CB --> FR
@@ -186,18 +160,18 @@ graph TD
 
     FR --> C_BASE["ConceptBaseline (SizingDraft)"]
     C_BASE --> VAL["Certification Validation Result"]
-    VAL --> SR["SizingResult (MTOW, Power, Wing Area)"]
+    VAL --> SR["SizingResult (MTOW, Battery, Areas)"]
     SR --> GP["GeometryParameterSet"]
-    GP --> VSP["OpenVSP 3D Model (.vsp3 / .stl / .obj)"]
+    GP --> VSP["OpenVSP 3D CAD (.vsp3 / .stl / .obj)"]
 
-    VSP --> AR["AerodynamicsAnalysisResult (.polar / .csv)"]
+    VSP --> AR["Aerodynamics Analysis (.polar / .csv)"]
     AR --> SP["SimulationParameterSet"]
     SP --> TR["Flight Trajectory & Telemetry Data"]
 
     FR --> RV["Runtime Verification Report"]
     TR --> RV
 
-    RV --> REP["Final AeroLoop Blueprint & Verification Report"]
+    RV --> REP["Final AeroLoop Blueprint & Report"]
     MOC --> REP
     AR --> REP
     SR --> REP

@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <img src="cert_agent_graph.png" alt="AeroLoop Logo / Agent Flow" width="750"/>
+  <img src="workflow_graph.png" alt="AeroLoop Multi-Agent Workflow Graph" width="100%"/>
 </p>
 
 **AeroLoop** is an engineering multi-agent platform designed to automate and orchestrate the full lifecycle of Urban Air Mobility (UAM) and eVTOL conceptual aircraft design, regulatory certification compliance, physics-based analysis, 3D parametric CAD modeling (OpenVSP), flight simulation, and runtime requirement verification.
@@ -60,41 +60,39 @@ Starting from **Natural Language Mission Inputs**, AeroLoop orchestrates require
 AeroLoop organizes specialized agents into three functional layers managed by a central Orchestrator.
 
 ```mermaid
-graph TD
-    User["User Mission Input<br/>(Natural Language)"] --> Orch["OrchestratorAgent<br/>(Central Router & State Manager)"]
+flowchart TD
+    User["User Mission Input"] --> Orch["OrchestratorAgent (Central Router)"]
 
-    subgraph L1["Layer 1. Requirement & Compliance Intelligence Layer"]
-        MPA["MissionParsingAgent<br/>Parses mission & extracts constraints"]
-        CRA["CustomerRequirementAgent<br/>Extracts customer/operational requirements"]
-        CCA["CertificationComplianceAgent<br/>Maps regulations, CCL, and MoC"]
-        RRA["RequirementReasoningAgent<br/>Resolves conflicts & establishes ConceptBaseline"]
-        CVA["CertificationValidatorAgent<br/>Validates baseline compliance"]
+    subgraph L1["Layer 1: Requirement & Compliance Intelligence"]
+        direction TB
+        MPA["MissionParsingAgent"]
+        CRA["CustomerRequirementAgent"]
+        CCA["CertificationComplianceAgent"]
+        RRA["RequirementReasoningAgent"]
+        CVA["CertificationValidatorAgent"]
+        MPA --> CRA --> CCA --> RRA --> CVA
     end
 
-    subgraph L2["Layer 2. Conceptual Design & Geometry Layer"]
-        SA["SizingAgent<br/>MTOW, Power, Battery & Disk Area Sizing"]
-        GDA["GeometryDesignAgent<br/>OpenVSP 3D Parametric CAD Generation"]
+    subgraph L2["Layer 2: Conceptual Design & Geometry"]
+        direction TB
+        SA["SizingAgent"]
+        GDA["GeometryDesignAgent"]
+        SA --> GDA
     end
 
-    subgraph L3["Layer 3. Aerodynamics, Simulation & Verification Layer"]
-        AAA["AerodynamicsAnalysisAgent<br/>VSPAERO Aero Coefficients & Mass Properties"]
-        SIM["SimulationAgent / PathPlanningAgent<br/>Trajectory Planning & 3D Flight Simulation"]
-        RVA["RuntimeVerificationAgent<br/>Real-Time Constraint & Safety Verification"]
-        RGA["ReportGenerationAgent<br/>Final Conceptual Design & Verification Report"]
+    subgraph L3["Layer 3: Aerodynamics, Simulation & Verification"]
+        direction TB
+        AAA["AerodynamicsAnalysisAgent"]
+        SIM["Simulation / PathPlanning"]
+        RVA["RuntimeVerificationAgent"]
+        RGA["ReportGenerationAgent"]
+        AAA --> SIM --> RVA --> RGA
     end
 
-    Orch <--> MPA
-    Orch <--> CRA
-    Orch <--> CCA
-    Orch <--> RRA
-    Orch <--> CVA
-    Orch <--> SA
-    Orch <--> GDA
-    Orch <--> AAA
-    Orch <--> SIM
-    Orch <--> RVA
-    Orch <--> RGA
-    RGA --> End["Final Output<br/>(3D CAD, Aero Data, Compliance Matrix, Report)"]
+    Orch --> L1
+    L1 --> L2
+    L2 --> L3
+    L3 --> End["Final Output (Blueprint & Report)"]
 ```
 
 ---
@@ -104,50 +102,26 @@ graph TD
 The workflow utilizes a LangGraph StateGraph that supports dynamic feedback and rollback when design constraints or physics solvers fail.
 
 ```mermaid
-graph TD
-    Start["START<br/>(Natural Language Mission)"] --> Orch["OrchestratorAgent"]
+flowchart TD
+    Start(["START: Natural Language Mission"]) --> MPA["1. MissionParsingAgent<br/>(Extract MissionProfile & Constraints)"]
+    MPA --> CRA["2. CustomerRequirementAgent<br/>(Generate Customer Requirements)"]
+    CRA --> CCA["3. CertificationComplianceAgent<br/>(Retrieve Rules & CCL/MoC Draft)"]
+    CCA --> RRA["4. RequirementReasoningAgent<br/>(Resolve Conflicts & ConceptBaseline)"]
+    RRA --> CVA["5. CertificationValidatorAgent<br/>(Validate Regulatory Compliance)"]
+    CVA --> SA["6. SizingAgent<br/>(MTOW, Battery & Power Sizing)"]
+    SA --> GDA["7. GeometryDesignAgent<br/>(OpenVSP 3D CAD Modeling)"]
+    GDA --> AAA["8. AerodynamicsAnalysisAgent<br/>(VSPAERO Polar & Mass Properties)"]
+    AAA --> SIM["9. Simulation & PathPlanning<br/>(Trajectory & Energy Verification)"]
+    SIM --> RVA["10. RuntimeVerificationAgent<br/>(Constraint & Geofence Check)"]
+    RVA --> RGA["11. ReportGenerationAgent<br/>(Generate Final Blueprint Report)"]
+    RGA --> EndNode(["END: Conceptual Design Blueprint"])
 
-    Orch -->|"1. Parse Mission"| MPA["MissionParsingAgent"]
-    MPA -->|"MissionProfile, Explicit Constraints, Missing Fields"| Orch
-
-    Orch -->|"2. Extract Customer Reqs"| CRA["CustomerRequirementAgent"]
-    CRA -->|"Candidate Requirements, Unresolved Questions"| Orch
-
-    Orch -->|"3. Review Certification Basis"| CCA["CertificationComplianceAgent"]
-    CCA -->|"Certification Basis, Applicable Rules, CCL/MoC Draft"| Orch
-
-    Orch -->|"4. Resolve & Baseline Reqs"| RRA["RequirementReasoningAgent"]
-    RRA -->|"FinalRequirementSet, ConceptBaseline (SizingDraft)"| Orch
-
-    Orch -->|"5. Validate Baseline"| CVA["CertificationValidatorAgent"]
-    CVA -->|"ValidationResult (is_valid, Violations/Warnings)"| Orch
-
-    Orch -->|"6. Size Aircraft"| SA["SizingAgent"]
-    SA -->|"SizingResult (MTOW, Battery, Disk Area, Wing Area)"| Orch
-
-    Orch -->|"7. Generate Geometry"| GDA["GeometryDesignAgent"]
-    GDA -->|"OpenVSP .vsp3, .stl, 3D Parameters"| Orch
-
-    Orch -->|"8. Analyze Aerodynamics"| AAA["AerodynamicsAnalysisAgent"]
-    AAA -->|"Aero Summary (dCl/dAlpha, Cd0, L/D), Mass Properties"| Orch
-
-    Orch -->|"9. Simulate Mission"| SIM["SimulationAgent / PathPlanningAgent"]
-    SIM -->|"Trajectory, Energy Consumption, Obstacle Clearance"| Orch
-
-    Orch -->|"10. Runtime Verification"| RVA["RuntimeVerificationAgent"]
-    RVA -->|"Pass/Fail Status, Violation Logs, Runtime Evidence"| Orch
-
-    Orch -->|"11. Generate Final Report"| RGA["ReportGenerationAgent"]
-    RGA --> End["END<br/>(Final Conceptual Design Blueprint)"]
-
-    %% Feedback / Rollback Loops
-    CRA -.->|"Missing info / ambiguous requirement"| RRA
-    CVA -.->|"Certification rule violation"| RRA
-    SA -.->|"Convergence failure / infeasible sizing"| RRA
-    AAA -.->|"Aero failure / aerodynamic stall"| SA
-    SIM -.->|"Energy depletion / Geofence breach"| RRA
-    RVA -.->|"Runtime requirement violation"| Orch
-    Orch -.->|"Relax mission constraint on persistent failure"| MPA
+    %% Feedback and Rollback Paths
+    CVA -.->|Rule Violation| RRA
+    SA -.->|Sizing Infeasible| RRA
+    AAA -.->|Aero Failure / Stall| SA
+    SIM -.->|Energy Depletion| RRA
+    RVA -.->|Constraint Violation| MPA
 ```
 
 ---
@@ -156,16 +130,16 @@ graph TD
 
 ```mermaid
 flowchart LR
-    A["MissionParsingAgent<br/>What does the user want?"] --> B["CustomerRequirementAgent<br/>What operational needs exist?"]
-    B --> C["CertificationComplianceAgent<br/>Which regulations, CCL & MoC apply?"]
-    C --> D["RequirementReasoningAgent<br/>What is the finalized baseline?"]
-    D --> E["CertificationValidatorAgent<br/>Does the baseline violate rules?"]
-    E --> F["SizingAgent<br/>What MTOW, power & battery size?"]
-    F --> G["GeometryDesignAgent<br/>What 3D shape is generated?"]
-    G --> H["AerodynamicsAnalysisAgent<br/>What are the aerodynamic coefficients?"]
-    H --> I["Simulation & PathPlanning<br/>Can it fly the planned trajectory?"]
-    I --> J["RuntimeVerificationAgent<br/>Were all constraints satisfied?"]
-    J --> K["ReportGenerationAgent<br/>Summarize design blueprint & evidence"]
+    A["MissionParsing<br/>User Intent"] --> B["CustomerReq<br/>Needs & Goals"]
+    B --> C["Certification<br/>Rules & MoC"]
+    C --> D["Reasoning<br/>Baseline Reqs"]
+    D --> E["Validator<br/>Rule Check"]
+    E --> F["Sizing<br/>MTOW & Power"]
+    F --> G["Geometry<br/>3D CAD Model"]
+    G --> H["Aerodynamics<br/>Polar & Load"]
+    H --> I["Simulation<br/>Flight Path"]
+    I --> J["Verification<br/>Safety Checks"]
+    J --> K["ReportGen<br/>Final Blueprint"]
 ```
 
 ---
@@ -173,12 +147,12 @@ flowchart LR
 ### 4. Data Artifact & Traceability Flow
 
 ```mermaid
-graph TD
+flowchart TD
     Input["Natural Language Mission"] --> MP["MissionProfile JSON"]
     MP --> CR["CandidateRequirementSet"]
     CR --> CB["Certification Basis & Rules"]
     CB --> CCL["Compliance Checklist (CCL)"]
-    CCL --> MOC["Means of Compliance (MoC Plan)"]
+    CCL --> MOC["Means of Compliance (MoC)"]
 
     CR --> FR["FinalRequirementSet"]
     CB --> FR
@@ -186,18 +160,18 @@ graph TD
 
     FR --> C_BASE["ConceptBaseline (SizingDraft)"]
     C_BASE --> VAL["Certification Validation Result"]
-    VAL --> SR["SizingResult (MTOW, Power, Wing Area)"]
+    VAL --> SR["SizingResult (MTOW, Battery, Areas)"]
     SR --> GP["GeometryParameterSet"]
-    GP --> VSP["OpenVSP 3D Model (.vsp3 / .stl / .obj)"]
+    GP --> VSP["OpenVSP 3D CAD (.vsp3 / .stl / .obj)"]
 
-    VSP --> AR["AerodynamicsAnalysisResult (.polar / .csv)"]
+    VSP --> AR["Aerodynamics Analysis (.polar / .csv)"]
     AR --> SP["SimulationParameterSet"]
     SP --> TR["Flight Trajectory & Telemetry Data"]
 
     FR --> RV["Runtime Verification Report"]
     TR --> RV
 
-    RV --> REP["Final AeroLoop Blueprint & Verification Report"]
+    RV --> REP["Final AeroLoop Blueprint & Report"]
     MOC --> REP
     AR --> REP
     SR --> REP
